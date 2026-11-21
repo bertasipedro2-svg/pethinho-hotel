@@ -1,0 +1,7 @@
+"use client";
+import {useEffect,useState} from "react";
+import {getSupabase} from "@/lib/supabase";
+type Booking={id:string;starts_at:string;ends_at:string;status:string};
+export default function Agenda(){const[items,setItems]=useState<Booking[]>([]);const[message,setMessage]=useState("Carregando...");const[date,setDate]=useState(new Date().toISOString().slice(0,10));
+useEffect(()=>{async function load(){try{const db=getSupabase();const{data:{user}}=await db.auth.getUser();if(!user){setMessage("Faça login para visualizar suas reservas.");return}const start=new Date(date+"T00:00:00").toISOString();const end=new Date(new Date(date+"T00:00:00").getTime()+86400000).toISOString();const{data,error}=await db.from("bookings").select("id,starts_at,ends_at,status").lt("starts_at",end).gt("ends_at",start).order("starts_at");if(error)throw error;setItems(data||[]);setMessage("")}catch(e){setMessage(e instanceof Error?e.message:"Erro ao carregar agenda")}}load()},[date]);
+return <main><h1>Agenda de reservas</h1><p>Exibe somente as reservas permitidas para sua conta.</p><label>Dia <input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label><p role="status">{message}</p><section className="card">{items.length===0?<p>Sem reservas visíveis neste dia.</p>:items.map(b=><article key={b.id}><strong>{b.status}</strong><p>{new Date(b.starts_at).toLocaleString("pt-BR")} — {new Date(b.ends_at).toLocaleString("pt-BR")}</p><hr/></article>)}</section></main>}
