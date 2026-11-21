@@ -1,0 +1,8 @@
+"use client";
+import {useState} from "react";
+import {getSupabase} from "@/lib/supabase";
+export default function Entrar(){
+ const[email,setEmail]=useState("");const[password,setPassword]=useState("");const[name,setName]=useState("");const[mode,setMode]=useState<"login"|"signup">("login");const[msg,setMsg]=useState("");const[busy,setBusy]=useState(false);
+ async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setMsg("");try{const db=getSupabase();const result=mode==="login"?await db.auth.signInWithPassword({email,password}):await db.auth.signUp({email,password,options:{data:{full_name:name}}});if(result.error)throw result.error;if(mode==="login")window.location.href="/minha-conta";else setMsg("Cadastro recebido. Confira seu e-mail para confirmar a conta, se solicitado.");}catch(e){setMsg(e instanceof Error?e.message:"Erro inesperado");}finally{setBusy(false)}}
+ return <main><h1>{mode==="login"?"Entrar":"Criar conta"}</h1><p>Área dos tutores do Pethinho Hotel</p><form onSubmit={submit} className="card">{mode==="signup"&&<label>Nome completo<input required value={name} onChange={e=>setName(e.target.value)}/></label>}<label>E-mail<input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Senha<input type="password" minLength={6} required value={password} onChange={e=>setPassword(e.target.value)}/></label><button disabled={busy}>{busy?"Aguarde...":mode==="login"?"Entrar":"Cadastrar"}</button><p role="status">{msg}</p></form><button onClick={()=>{setMode(mode==="login"?"signup":"login");setMsg("")}}>{mode==="login"?"Não tenho conta":"Já tenho conta"}</button></main>
+}
