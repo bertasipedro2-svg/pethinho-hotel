@@ -6,11 +6,27 @@ on:
     branches: [main, development]
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   typecheck-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Block committed private keys and Supabase service-role JWTs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -I -q -E -- '-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----' -- . ':!*.lock'; then
+            echo "::error::Private key material detected in tracked files."
+            exit 1
+          fi
+          if git grep -I -q -E -- 'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' -- src app pages public 2>/dev/null; then
+            echo "::error::JWT-like token detected in application files. Review before merging."
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
