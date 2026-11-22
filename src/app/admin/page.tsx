@@ -52,6 +52,15 @@ export default function Admin(){
      all.push(...(data||[]));
      hasMore=(data||[]).length===pageSize;
     }
+    // A sessão ou a função da equipe pode ter mudado durante a paginação.
+    // Nunca exibir dados obtidos com uma autorização que já não é válida.
+    if(!active)return;
+    const {data:{user:currentUser},error:currentAuthError}=await db.auth.getUser();
+    if(currentAuthError)throw currentAuthError;
+    if(!currentUser||currentUser.id!==user.id)throw new Error("Sessão alterada. Atualize o painel.");
+    const {data:currentRole,error:currentRoleError}=await db.from("staff_roles").select("role").eq("user_id",currentUser.id).maybeSingle();
+    if(currentRoleError)throw currentRoleError;
+    if(!currentRole||!["admin","staff"].includes(currentRole.role))throw new Error("Acesso administrativo revogado.");
     if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setReadiness({accommodations:accommodationsResult.count??0,services:servicesResult.count??0});setMsg("");}
    }catch(e){if(active){setAllowed(false);setReadiness(null);setMsg(e instanceof Error?e.message:"Falha ao consultar reservas.");}}
    finally{if(active)setLoading(false)}
