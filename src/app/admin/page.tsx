@@ -35,7 +35,7 @@ export default function Admin(){
     if(!user){if(active)setMsg("Faça login para acessar o painel.");return}
     const{data:role,error:roleError}=await db.from("staff_roles").select("role").eq("user_id",user.id).maybeSingle();
     if(roleError)throw roleError;
-    if(!role){if(active)setMsg("Acesso restrito à equipe autorizada.");return}
+    if(!role||!["admin","staff"].includes(role.role)){if(active)setMsg("Acesso restrito à equipe autorizada.");return}
     // Consultas independentes de leitura: nenhuma reserva é criada ou ativada.
     const [accommodationsResult,servicesResult]=await Promise.all([
      db.from("accommodations").select("id",{count:"exact",head:true}).eq("active",true),
