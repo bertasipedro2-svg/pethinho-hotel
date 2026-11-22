@@ -21,7 +21,14 @@ export default function Admin(){
     const{data:role,error:roleError}=await db.from("staff_roles").select("role").eq("user_id",user.id).maybeSingle();
     if(roleError)throw roleError;
     if(!role){if(active)setMsg("Acesso restrito à equipe autorizada.");return}
-    // Consultas independentes de leitura: nenhuma reserva é criada ou ativada.\n    const [accommodationsResult,servicesResult]=await Promise.all([\n     db.from("accommodations").select("id",{count:"exact",head:true}).eq("active",true),\n     db.from("services").select("id",{count:"exact",head:true}).eq("active",true),\n    ]);\n    if(accommodationsResult.error)throw accommodationsResult.error;\n    if(servicesResult.error)throw servicesResult.error;\n    const all:Booking[]=[];
+    // Consultas independentes de leitura: nenhuma reserva é criada ou ativada.
+    const [accommodationsResult,servicesResult]=await Promise.all([
+     db.from("accommodations").select("id",{count:"exact",head:true}).eq("active",true),
+     db.from("services").select("id",{count:"exact",head:true}).eq("active",true),
+    ]);
+    if(accommodationsResult.error)throw accommodationsResult.error;
+    if(servicesResult.error)throw servicesResult.error;
+    const all:Booking[]=[];
     const pageSize=500;
     let hasMore=true;
     while(hasMore&&all.length<10000){
@@ -50,7 +57,12 @@ export default function Admin(){
   {loading?<p role="status">Carregando dados e permissões...</p>:
   !allowed?<p role="alert">{msg}</p>:
   <>
-   {readiness&&<section className="card" aria-labelledby="readiness"><h2 id="readiness">Prontidão operacional</h2>\n    <p>Acomodações ativas: {readiness.accommodations}. Serviços ativos: {readiness.services}.</p>\n    {(readiness.accommodations===0||readiness.services===0)&&<p role="alert">Homologação pendente: não há {readiness.accommodations===0?"acomodações ativas":"capacidade validada"}{readiness.services===0?" e serviços ativos":""}. Não liberar reservas comerciais.</p>}\n    <p>Estes indicadores não comprovam capacidade disponível nem autorização para operar; validar conflitos e permissões antes da liberação.</p>\n   </section>}\n   <p role="status">Resumo de {rows.length} reservas acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>
+   {readiness&&<section className="card" aria-labelledby="readiness"><h2 id="readiness">Prontidão operacional</h2>
+    <p>Acomodações ativas: {readiness.accommodations}. Serviços ativos: {readiness.services}.</p>
+    {(readiness.accommodations===0||readiness.services===0)&&<p role="alert">Homologação pendente: não há {readiness.accommodations===0?"acomodações ativas":"capacidade validada"}{readiness.services===0?" e serviços ativos":""}. Não liberar reservas comerciais.</p>}
+    <p>Estes indicadores não comprovam capacidade disponível nem autorização para operar; validar conflitos e permissões antes da liberação.</p>
+   </section>}
+   <p role="status">Resumo de {rows.length} reservas acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>
    {truncated&&<p role="alert">Limite de 10.000 reservas atingido. Os totais podem estar incompletos; exporte os dados para uma apuração completa.</p>}
    <button type="button" onClick={()=>{setLoading(true);setRefresh(n=>n+1)}}>Atualizar dados</button>
    <section className="card" aria-labelledby="summary"><h2 id="summary">Resumo por situação</h2>
