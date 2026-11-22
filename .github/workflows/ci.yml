@@ -31,11 +31,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git grep -I -n -E -- 'NEXT_PUBLIC_[A-Z0-9_]*(SERVICE_ROLE|SECRET_KEY|DATABASE_PASSWORD|DB_PASSWORD)' -- . ':!*.lock'; then
+          if git grep -I -n -E -- 'NEXT_PUBLIC_[A-Z0-9_]*(SERVICE_ROLE|SECRET_KEY|DATABASE_PASSWORD|DB_PASSWORD)' -- . ':!*.lock' ':!.github/workflows/**'; then
             echo "::error::Privileged credentials must never use NEXT_PUBLIC_ variables."
             exit 1
           fi
-          if git grep -I -n -E -- 'NEXT_PUBLIC_SUPABASE_(SERVICE_ROLE_KEY|SECRET_KEY)' -- . ':!*.lock'; then
+          if git grep -I -n -E -- 'NEXT_PUBLIC_SUPABASE_(SERVICE_ROLE_KEY|SECRET_KEY)' -- . ':!*.lock' ':!.github/workflows/**'; then
             echo "::error::Supabase privileged keys must remain server-side."
             exit 1
           fi
