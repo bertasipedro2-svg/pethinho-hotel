@@ -22,7 +22,20 @@ export default function Admin(){
     setRefresh(n=>n+1);
    }
   });
-  return()=>subscription.unsubscribe();
+  // Ao retornar à aba, revalidar sessão e função antes de mostrar dados antigos.
+  const revalidate=()=>{
+   if(document.visibilityState!=="visible")return;
+   setAllowed(false);
+   setRows([]);
+   setReadiness(null);
+   setLoading(true);
+   setRefresh(n=>n+1);
+  };
+  document.addEventListener("visibilitychange",revalidate);
+  return()=>{
+   subscription.unsubscribe();
+   document.removeEventListener("visibilitychange",revalidate);
+  };
  },[]);
  useEffect(()=>{
   let active=true;
