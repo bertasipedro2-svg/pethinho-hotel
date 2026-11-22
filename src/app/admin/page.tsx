@@ -10,10 +10,24 @@ export default function Admin(){
  const[loading,setLoading]=useState(true),[msg,setMsg]=useState("Verificando permissões...");
  const[refresh,setRefresh]=useState(0),[truncated,setTruncated]=useState(false);
  const[readiness,setReadiness]=useState<{accommodations:number;services:number}|null>(null);
+ // Revalidar o acesso quando a sessão muda (inclusive logout em outra aba).
+ useEffect(()=>{
+  const db=getSupabase();
+  const {data:{subscription}}=db.auth.onAuthStateChange(event=>{
+   if(event==="SIGNED_IN"||event==="SIGNED_OUT"||event==="USER_UPDATED"){
+    setAllowed(false);
+    setRows([]);
+    setReadiness(null);
+    setLoading(true);
+    setRefresh(n=>n+1);
+   }
+  });
+  return()=>subscription.unsubscribe();
+ },[]);
  useEffect(()=>{
   let active=true;
   async function load(){
-   if(active){setAllowed(false);setRows([]);setReadiness(null);setTruncated(false);setMsg("Verificando permissões...");}
+   if(active){setLoading(true);setAllowed(false);setRows([]);setReadiness(null);setTruncated(false);setMsg("Verificando permissões...");}
    try{
     const db=getSupabase();
     const{data:{user},error:authError}=await db.auth.getUser();
