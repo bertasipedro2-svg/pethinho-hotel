@@ -9,6 +9,7 @@ export default function Admin(){
  const[allowed,setAllowed]=useState(false),[rows,setRows]=useState<Booking[]>([]);
  const[loading,setLoading]=useState(true),[msg,setMsg]=useState("Verificando permissões...");
  const[refresh,setRefresh]=useState(0),[truncated,setTruncated]=useState(false);
+ const[readiness,setReadiness]=useState<{accommodations:number;services:number}|null>(null);
  useEffect(()=>{
   let active=true;
   async function load(){
@@ -20,7 +21,7 @@ export default function Admin(){
     const{data:role,error:roleError}=await db.from("staff_roles").select("role").eq("user_id",user.id).maybeSingle();
     if(roleError)throw roleError;
     if(!role){if(active)setMsg("Acesso restrito à equipe autorizada.");return}
-    const all:Booking[]=[];
+    // Consultas independentes de leitura: nenhuma reserva é criada ou ativada.\n    const [accommodationsResult,servicesResult]=await Promise.all([\n     db.from("accommodations").select("id",{count:"exact",head:true}).eq("active",true),\n     db.from("services").select("id",{count:"exact",head:true}).eq("active",true),\n    ]);\n    if(accommodationsResult.error)throw accommodationsResult.error;\n    if(servicesResult.error)throw servicesResult.error;\n    const all:Booking[]=[];
     const pageSize=500;
     let hasMore=true;
     while(hasMore&&all.length<10000){
@@ -29,8 +30,8 @@ export default function Admin(){
      all.push(...(data||[]));
      hasMore=(data||[]).length===pageSize;
     }
-    if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setMsg("");}
-   }catch(e){if(active){setAllowed(false);setMsg(e instanceof Error?e.message:"Falha ao consultar reservas.");}}
+    if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setReadiness({accommodations:accommodationsResult.count??0,services:servicesResult.count??0});setMsg("");}
+   }catch(e){if(active){setAllowed(false);setReadiness(null);setMsg(e instanceof Error?e.message:"Falha ao consultar reservas.");}}
    finally{if(active)setLoading(false)}
   }
   void load();
@@ -49,7 +50,7 @@ export default function Admin(){
   {loading?<p role="status">Carregando dados e permissões...</p>:
   !allowed?<p role="alert">{msg}</p>:
   <>
-   <p role="status">Resumo de {rows.length} reservas acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>
+   {readiness&&<section className="card" aria-labelledby="readiness"><h2 id="readiness">Prontidão operacional</h2>\n    <p>Acomodações ativas: {readiness.accommodations}. Serviços ativos: {readiness.services}.</p>\n    {(readiness.accommodations===0||readiness.services===0)&&<p role="alert">Homologação pendente: não há {readiness.accommodations===0?"acomodações ativas":"capacidade validada"}{readiness.services===0?" e serviços ativos":""}. Não liberar reservas comerciais.</p>}\n    <p>Estes indicadores não comprovam capacidade disponível nem autorização para operar; validar conflitos e permissões antes da liberação.</p>\n   </section>}\n   <p role="status">Resumo de {rows.length} reservas acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>
    {truncated&&<p role="alert">Limite de 10.000 reservas atingido. Os totais podem estar incompletos; exporte os dados para uma apuração completa.</p>}
    <button type="button" onClick={()=>{setLoading(true);setRefresh(n=>n+1)}}>Atualizar dados</button>
    <section className="card" aria-labelledby="summary"><h2 id="summary">Resumo por situação</h2>
