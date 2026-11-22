@@ -8,6 +8,7 @@ const labels:Record<string,string>={pending:"Pendente",approved:"Aprovada",confi
 export default function Admin(){
  const[allowed,setAllowed]=useState(false),[rows,setRows]=useState<Booking[]>([]);
  const[loading,setLoading]=useState(true),[msg,setMsg]=useState("Verificando permissões...");
+ const[refresh,setRefresh]=useState(0),[truncated,setTruncated]=useState(false);
  useEffect(()=>{
   let active=true;
   async function load(){
@@ -19,15 +20,22 @@ export default function Admin(){
     const{data:role,error:roleError}=await db.from("staff_roles").select("role").eq("user_id",user.id).maybeSingle();
     if(roleError)throw roleError;
     if(!role){if(active)setMsg("Acesso restrito à equipe autorizada.");return}
-    const{data,error}=await db.from("bookings").select("id,starts_at,ends_at,status").order("starts_at",{ascending:false}).limit(200);
-    if(error)throw error;
-    if(active){setAllowed(true);setRows(data||[]);setMsg("");}
+    const all:Booking[]=[];
+    const pageSize=500;
+    let hasMore=true;
+    while(hasMore&&all.length<10000){
+     const{data,error}=await db.from("bookings").select("id,starts_at,ends_at,status").order("starts_at",{ascending:false}).order("id",{ascending:false}).range(all.length,all.length+pageSize-1);
+     if(error)throw error;
+     all.push(...(data||[]));
+     hasMore=(data||[]).length===pageSize;
+    }
+    if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setMsg("");}
    }catch(e){if(active){setAllowed(false);setMsg(e instanceof Error?e.message:"Falha ao consultar reservas.");}}
    finally{if(active)setLoading(false)}
   }
   void load();
   return()=>{active=false};
- },[]);
+ },[refresh]);
  const stats=useMemo(()=>{
   const counts:Record<string,number>={};
   for(const row of rows)counts[row.status]=(counts[row.status]||0)+1;
@@ -41,7 +49,9 @@ export default function Admin(){
   {loading?<p role="status">Carregando dados e permissões...</p>:
   !allowed?<p role="alert">{msg}</p>:
   <>
-   <p role="status">Visão de até 200 reservas recentes. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>
+   <p role="status">Resumo de {rows.length} reservas acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>
+   {truncated&&<p role="alert">Limite de 10.000 reservas atingido. Os totais podem estar incompletos; exporte os dados para uma apuração completa.</p>}
+   <button type="button" onClick={()=>{setLoading(true);setRefresh(n=>n+1)}}>Atualizar dados</button>
    <section className="card" aria-labelledby="summary"><h2 id="summary">Resumo por situação</h2>
     <ul>{Object.entries(labels).map(([key,label])=><li key={key}>{label}: {stats.counts[key]||0}</li>)}</ul>
    </section>
