@@ -23,7 +23,7 @@ jobs:
             echo "::error::Private key material detected in tracked files."
             exit 1
           fi
-          if git grep -I -q -E -- 'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' -- src app pages public 2>/dev/null; then
+          if git grep -I -q -E -- 'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' -- . ':!*.lock'; then
             echo "::error::JWT-like token detected in application files. Review before merging."
             exit 1
           fi
