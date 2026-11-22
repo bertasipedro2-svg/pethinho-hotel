@@ -13,6 +13,7 @@ export default function Admin(){
  useEffect(()=>{
   let active=true;
   async function load(){
+   if(active){setAllowed(false);setRows([]);setReadiness(null);setTruncated(false);setMsg("Verificando permissões...");}
    try{
     const db=getSupabase();
     const{data:{user},error:authError}=await db.auth.getUser();
