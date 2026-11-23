@@ -17,7 +17,7 @@ export default function Agenda(){
  useEffect(()=>{
   let cancelled=false;
   async function load(){
-   setLoading(true);setItems([]);setMessage("Carregando...");
+   setLoading(true);setItems([]);setTotal(0);setMessage("Carregando...");
    try{
     const bounds=dayBounds(date);if(!bounds)throw new Error("Selecione uma data válida.");
     const db=getSupabase();
@@ -26,8 +26,18 @@ export default function Agenda(){
     if(!user){if(!cancelled)setMessage("Faça login para visualizar suas reservas.");return;}
     const{data,error,count}=await db.from("bookings").select("id,starts_at,ends_at,status",{count:"exact"}).eq("owner_id",user.id).lt("starts_at",bounds.end).gt("ends_at",bounds.start).order("starts_at",{ascending:true}).order("id",{ascending:true}).range(page*pageSize,(page+1)*pageSize-1);
     if(error)throw error;
-    if(!cancelled){setItems(data||[]);setTotal(count||0);setMessage("");}
-   }catch(e){if(!cancelled)setMessage(e instanceof Error?e.message:"Erro ao carregar agenda");}
+    if(!cancelled){
+     const resultTotal=count||0;
+     // Se uma reserva foi removida, a página atual pode não existir mais.
+     // Retorne à última página válida em vez de exibir uma lista vazia enganosa.
+     if(page>0&&page*pageSize>=resultTotal){setPage(Math.max(0,Math.ceil(resultTotal/pageSize)-1));return;}
+     setItems(data||[]);setTotal(resultTotal);setMessage("");
+    }
+   }catch(e){
+    // Não exibir detalhes internos do banco ou da autenticação ao cliente.
+    console.error("Falha ao carregar agenda",e);
+    if(!cancelled)setMessage(e instanceof Error&&e.message==="Selecione uma data válida."?e.message:"Não foi possível carregar suas reservas. Tente atualizar.");
+   }
    finally{if(!cancelled)setLoading(false);}
   }
   void load();
