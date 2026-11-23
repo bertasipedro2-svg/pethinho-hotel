@@ -11,7 +11,7 @@ function saoPauloMidnight(year:number,month:number,day:number){
  const formatter=new Intl.DateTimeFormat("en-US",{timeZone:"America/Sao_Paulo",timeZoneName:"shortOffset"});
  for(let i=0;i<3;i++){
   const label=formatter.formatToParts(new Date(instant)).find(part=>part.type==="timeZoneName")?.value||"";
-  const match=/^GMT([+-])(\\d{1,2})(?::(\\d{2}))?$/.exec(label);
+  const match=/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/.exec(label);
   if(!match)throw new Error("Fuso horário indisponível.");
   const offset=(match[1]==="+"?1:-1)*(Number(match[2])*60+Number(match[3]||0));
   const next=midnightUtc-offset*60000;
@@ -21,7 +21,7 @@ function saoPauloMidnight(year:number,month:number,day:number){
  return new Date(instant).toISOString();
 }
 function dayBounds(date:string){
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date))return null;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return null;
  const [y,m,d]=date.split("-").map(Number);
  const check=new Date(Date.UTC(y,m-1,d));
  if(check.getUTCFullYear()!==y||check.getUTCMonth()!==m-1||check.getUTCDate()!==d)return null;
