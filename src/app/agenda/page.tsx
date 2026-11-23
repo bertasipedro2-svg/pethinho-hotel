@@ -10,6 +10,9 @@ export default function Agenda(){
  const[message,setMessage]=useState("Carregando...");
  const[date,setDate]=useState(()=>localDate(new Date()));
  const[loading,setLoading]=useState(true);
+ const[page,setPage]=useState(0);
+ const[total,setTotal]=useState(0);
+ const pageSize=50;
  useEffect(()=>{
   let cancelled=false;
   async function load(){
@@ -20,18 +23,20 @@ export default function Agenda(){
     const{data:{user},error:authError}=await db.auth.getUser();
     if(authError)throw authError;
     if(!user){if(!cancelled)setMessage("Faça login para visualizar suas reservas.");return;}
-    const{data,error}=await db.from("bookings").select("id,starts_at,ends_at,status").eq("owner_id",user.id).lt("starts_at",bounds.end).gt("ends_at",bounds.start).order("starts_at").limit(100);
+    const{data,error,count}=await db.from("bookings").select("id,starts_at,ends_at,status",{count:"exact"}).eq("owner_id",user.id).lt("starts_at",bounds.end).gt("ends_at",bounds.start).order("starts_at",{ascending:true}).order("id",{ascending:true}).range(page*pageSize,(page+1)*pageSize-1);
     if(error)throw error;
-    if(!cancelled){setItems(data||[]);setMessage("");}
+    if(!cancelled){setItems(data||[]);setTotal(count||0);setMessage("");}
    }catch(e){if(!cancelled)setMessage(e instanceof Error?e.message:"Erro ao carregar agenda");}
    finally{if(!cancelled)setLoading(false);}
   }
   void load();
   return()=>{cancelled=true;};
- },[date]);
+ },[date,page]);
  return <main><h1>Agenda de reservas</h1><p>Exibe somente as reservas permitidas para sua conta.</p>
- <label>Dia <input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label>
+ <label>Dia <input type="date" value={date} onChange={e=>{setDate(e.target.value);setPage(0);}}/></label>
  <p role="status" aria-live="polite">{message}</p>
+ {!loading&&!message&&<p>{total} reserva(s) neste dia. Página {page+1} de {Math.max(1,Math.ceil(total/pageSize))}.</p>}
  {!loading&&!message&&<section className="card">{items.length===0?<p>Sem reservas visíveis neste dia.</p>:items.map(b=><article key={b.id}><strong>{statusLabel[b.status]||b.status}</strong><p>{new Date(b.starts_at).toLocaleString("pt-BR")} — {new Date(b.ends_at).toLocaleString("pt-BR")}</p><hr/></article>)}</section>}
+ {!loading&&!message&&total>pageSize&&<nav aria-label="Paginação da agenda"><button type="button" disabled={page===0} onClick={()=>setPage(p=>Math.max(0,p-1))}>Anterior</button> <button type="button" disabled={(page+1)*pageSize>=total} onClick={()=>setPage(p=>p+1)}>Próxima</button></nav>}
  </main>;
 }
