@@ -3,7 +3,7 @@ import {useEffect,useState} from "react";
 import {getSupabase} from "@/lib/supabase";
 type Booking={id:string;starts_at:string;ends_at:string;status:string};
 const statusLabel:Record<string,string>={pending:"Aguardando análise",approved:"Aprovada",confirmed:"Confirmada",checked_in:"Check-in realizado",checked_out:"Check-out realizado",completed:"Concluída",cancelled:"Cancelada",no_show:"Não compareceu"};
-function localDate(d:Date){const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}
+function localDate(d:Date){return new Intl.DateTimeFormat("sv-SE",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);}
 // A agenda utiliza o dia civil do estabelecimento (São Paulo), não o fuso do dispositivo.
 function saoPauloMidnight(year:number,month:number,day:number){
  const midnightUtc=Date.UTC(year,month-1,day);
