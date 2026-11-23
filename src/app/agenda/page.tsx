@@ -11,6 +11,7 @@ export default function Agenda(){
  const[date,setDate]=useState(()=>localDate(new Date()));
  const[loading,setLoading]=useState(true);
  const[page,setPage]=useState(0);
+ const[refreshKey,setRefreshKey]=useState(0);
  const[total,setTotal]=useState(0);
  const pageSize=50;
  useEffect(()=>{
@@ -31,9 +32,10 @@ export default function Agenda(){
   }
   void load();
   return()=>{cancelled=true;};
- },[date,page]);
+ },[date,page,refreshKey]);
  return <main><h1>Agenda de reservas</h1><p>Exibe somente as reservas permitidas para sua conta.</p>
  <label>Dia <input type="date" value={date} onChange={e=>{setDate(e.target.value);setPage(0);}}/></label>
+ <button type="button" disabled={loading} onClick={()=>setRefreshKey(k=>k+1)} aria-label="Atualizar reservas da agenda">Atualizar reservas</button>
  <p role="status" aria-live="polite">{message}</p>
  {!loading&&!message&&<p>{total} reserva(s) neste dia. Página {page+1} de {Math.max(1,Math.ceil(total/pageSize))}.</p>}
  {!loading&&!message&&<section className="card">{items.length===0?<p>Sem reservas visíveis neste dia.</p>:items.map(b=><article key={b.id}><strong>{statusLabel[b.status]||b.status}</strong><p>{new Date(b.starts_at).toLocaleString("pt-BR")} — {new Date(b.ends_at).toLocaleString("pt-BR")}</p><hr/></article>)}</section>}
