@@ -70,7 +70,7 @@ export default function Agenda(){
  <button type="button" disabled={loading} onClick={()=>setRefreshKey(k=>k+1)} aria-label="Atualizar reservas da agenda">Atualizar reservas</button>
  <p role="status" aria-live="polite">{message}</p>
  {!loading&&!message&&<p>{total} reserva(s) neste dia. Página {page+1} de {Math.max(1,Math.ceil(total/pageSize))}.</p>}
- {!loading&&!message&&<section className="card">{items.length===0?<p>Sem reservas visíveis neste dia.</p>:items.map(b=><article key={b.id}><strong>{statusLabel[b.status]||b.status}</strong><p>{new Date(b.starts_at).toLocaleString("pt-BR")} — {new Date(b.ends_at).toLocaleString("pt-BR")}</p><hr/></article>)}</section>}
+ {!loading&&!message&&<section className="card">{items.length===0?<p>Sem reservas visíveis neste dia.</p>:items.map(b=><article key={b.id}><strong>{statusLabel[b.status]||b.status}</strong><p>{new Date(b.starts_at).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"})} — {new Date(b.ends_at).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"})}</p><hr/></article>)}</section>}
  {!loading&&!message&&total>pageSize&&<nav aria-label="Paginação da agenda"><button type="button" disabled={page===0} onClick={()=>setPage(p=>Math.max(0,p-1))}>Anterior</button> <button type="button" disabled={(page+1)*pageSize>=total} onClick={()=>setPage(p=>p+1)}>Próxima</button></nav>}
  </main>;
 }
