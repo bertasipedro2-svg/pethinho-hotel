@@ -4,7 +4,29 @@ import {getSupabase} from "@/lib/supabase";
 type Booking={id:string;starts_at:string;ends_at:string;status:string};
 const statusLabel:Record<string,string>={pending:"Aguardando análise",approved:"Aprovada",confirmed:"Confirmada",checked_in:"Check-in realizado",checked_out:"Check-out realizado",completed:"Concluída",cancelled:"Cancelada",no_show:"Não compareceu"};
 function localDate(d:Date){const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}
-function dayBounds(date:string){const [y,m,d]=date.split("-").map(Number);if(!y||!m||!d)return null;const start=new Date(y,m-1,d);if(start.getFullYear()!==y||start.getMonth()!==m-1||start.getDate()!==d)return null;const end=new Date(y,m-1,d+1);return {start:start.toISOString(),end:end.toISOString()};}
+// A agenda utiliza o dia civil do estabelecimento (São Paulo), não o fuso do dispositivo.
+function saoPauloMidnight(year:number,month:number,day:number){
+ const midnightUtc=Date.UTC(year,month-1,day);
+ let instant=midnightUtc;
+ const formatter=new Intl.DateTimeFormat("en-US",{timeZone:"America/Sao_Paulo",timeZoneName:"shortOffset"});
+ for(let i=0;i<3;i++){
+  const label=formatter.formatToParts(new Date(instant)).find(part=>part.type==="timeZoneName")?.value||"";
+  const match=/^GMT([+-])(\\d{1,2})(?::(\\d{2}))?$/.exec(label);
+  if(!match)throw new Error("Fuso horário indisponível.");
+  const offset=(match[1]==="+"?1:-1)*(Number(match[2])*60+Number(match[3]||0));
+  const next=midnightUtc-offset*60000;
+  if(next===instant)break;
+  instant=next;
+ }
+ return new Date(instant).toISOString();
+}
+function dayBounds(date:string){
+ if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date))return null;
+ const [y,m,d]=date.split("-").map(Number);
+ const check=new Date(Date.UTC(y,m-1,d));
+ if(check.getUTCFullYear()!==y||check.getUTCMonth()!==m-1||check.getUTCDate()!==d)return null;
+ return {start:saoPauloMidnight(y,m,d),end:saoPauloMidnight(y,m,d+1)};
+}
 export default function Agenda(){
  const[items,setItems]=useState<Booking[]>([]);
  const[message,setMessage]=useState("Carregando...");
