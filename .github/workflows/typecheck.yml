@@ -1,4 +1,4 @@
-name: TypeScript validation
+name: TypeScript and build validation
 
 on:
   push:
@@ -24,3 +24,5 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: TypeScript check
         run: npm run lint
+      - name: Production build (no deployment)
+        run: npm run build
