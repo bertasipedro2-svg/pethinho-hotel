@@ -50,12 +50,17 @@ try {
       (pet_id with =, tstzrange(starts_at,ends_at,'[)') with &&)
       where (status in ('approved','awaiting_payment','confirmed','checked_in'));
   `);
-  for (const file of ["./live-function-baseline.sql", "../capacity_and_booking_retry.sql", "../restrict_function_execution.sql", "../admin_finance_ledger.sql"]) {
+  for (const file of ["./live-function-baseline.sql", "../capacity_and_booking_retry.sql", "../restrict_function_execution.sql", "../admin_finance_ledger.sql", "../accommodation_availability_guard.sql"]) {
     await control.query(await readFile(new URL(file, import.meta.url), "utf8"));
   }
   await control.query(`
     create trigger capacity before insert or update of accommodation_id,starts_at,ends_at,status
       on public.bookings for each row execute function public.enforce_accommodation_booking_capacity();
+    alter table public.accommodations enable row level security;
+    create policy room_read on public.accommodations for select to authenticated using (public.is_staff());
+    create policy room_update on public.accommodations for update to authenticated
+      using (public.is_admin()) with check (public.is_admin());
+    grant select, update on public.accommodations to authenticated;
     alter table public.bookings enable row level security;
     create policy booking_read on public.bookings for select to authenticated
       using (owner_id = auth.uid() or public.is_staff());
@@ -142,6 +147,47 @@ try {
   console.log("PASS: RPCs operacionais de aprovação, confirmação, check-in, check-out e conclusão.");
   await control.query("insert into auth.users values ($1),($2)", [employee,admin]);
   await first.query("select set_config('request.jwt.claim.sub',$1,false)", [employee]);
+  const testRoom = randomUUID(), otherRoom = randomUUID();
+  await control.query("insert into public.accommodations values ($1,1,true),($2,1,true)", [testRoom,otherRoom]);
+  const candidates = [];
+  for (const pet of pets.slice(7)) {
+    await first.query("select set_config('request.jwt.claim.sub',$1,false)", [owner]);
+    candidates.push((await request(first, pet)).rows[0].id);
+  }
+  const setActive = (client, id, active) => client.query(
+    "update public.accommodations set active=$2 where id=$1 returning id", [id,active],
+  );
+  const approveFor = (client, booking, target) => client.query(
+    "select public.approve_booking($1,$2)", [booking,target],
+  );
+  assert.equal((await setActive(first,testRoom,false)).rowCount,0);
+  await first.query("select set_config('request.jwt.claim.sub',$1,false)", [employee]);
+  assert.equal((await setActive(first,testRoom,false)).rowCount,0);
+  await assert.rejects(approveFor(first,candidates[0],room), /Shared accommodation/);
+  const [, deactivateAfterApproval] = await overlap(
+    (client) => approveFor(client,candidates[0],testRoom),
+    (client) => setActive(client,testRoom,false),
+  );
+  assert.match(deactivateAfterApproval.error?.message ?? "", /upcoming reservation/);
+  await first.query("select set_config('request.jwt.claim.sub',$1,false)", [admin]);
+  await second.query("select set_config('request.jwt.claim.sub',$1,false)", [employee]);
+  const [, approveAfterDeactivation] = await overlap(
+    (client) => setActive(client,otherRoom,false),
+    (client) => approveFor(client,candidates[1],otherRoom),
+  );
+  assert.match(approveAfterDeactivation.error?.message ?? "", /missing or inactive/);
+  await first.query("select set_config('request.jwt.claim.sub',$1,false)", [employee]);
+  await second.query("select set_config('request.jwt.claim.sub',$1,false)", [admin]);
+  await first.query("select public.transition_booking($1,'confirmed')",[candidates[0]]);
+  await first.query("select public.transition_booking($1,'checked_in')",[candidates[0]]);
+  await control.query("update public.bookings set starts_at=now()-interval '2 days', ends_at=now()-interval '1 day' where id=$1",[candidates[0]]);
+  await assert.rejects(setActive(second,testRoom,false), /stay in progress/);
+  await first.query("select public.transition_booking($1,'checked_out')",[candidates[0]]);
+  assert.equal((await setActive(second,testRoom,false)).rowCount,1);
+  assert.equal((await setActive(second,testRoom,true)).rowCount,1);
+  assert.equal((await control.query("select accommodation_id from public.bookings where id=$1",[candidates[0]])).rows[0].accommodation_id,testRoom);
+  await first.query("select public.transition_booking($1,'cancelled')",[candidates[1]]);
+  console.log("PASS: aprovação e desativação em ambas as ordens, perfis, proteção de estadia atrasada, cancelamento e reativação.");
   const addEntry = (client) => client.query(
     "insert into public.finance_entries(kind,description,amount_cents,due_on) values ('income','fixture',5300,current_date) returning id,settled_on",
   );
@@ -159,6 +205,10 @@ try {
   await control.query("begin isolation level repeatable read");
   await assert.rejects(write(control, pets[7], room2, 20, 22), {code:"40001"});
   await control.query("rollback");
+  await control.query(await readFile(new URL("../rollback/accommodation_availability_guard.sql", import.meta.url), "utf8"));
+  assert.equal((await control.query("select to_regprocedure('public.guard_accommodation_deactivation()') as guard")).rows[0].guard,null);
+  assert.equal((await control.query("select accommodation_id from public.bookings where id=$1",[candidates[0]])).rows[0].accommodation_id,testRoom);
+  console.log("PASS: reversão do gatilho preserva os vínculos das reservas.");
   console.log("PASS: pico, adjacência, excesso, exclusão por pet, corrida de vagas, retry concorrente, isolamento do tutor e proteção de snapshot.");
 } finally {
   await Promise.allSettled(clients.map(client => client.end()));
