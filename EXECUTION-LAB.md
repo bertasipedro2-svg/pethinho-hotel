@@ -37,3 +37,10 @@ Ponto de restauração anterior à migração no Supabase de desenvolvimento: ve
 | Chromium | `node scripts/mobile-lab.mjs` com perfil de iPhone 13 e `PETHINHO_TEST_VIEW=desktop` passaram com API simulada. Inclui agenda, cadastros, permissões de interface, relatórios e CSV. |
 
 [A alteração de esquema](https://github.com/bertasipedro2-svg/pethinho-hotel/commit/42d328ce37f1b58a014f6693f4f4aeb7a5e0bca1) está vinculada ao ponto de restauração acima. Ainda falta validar sessões autenticadas na prévia hospedada, Safari em iPhone físico, as regras de acomodação compartilhada e os termos comerciais. As branches seguem abertas para revisão. Nenhuma publicação ou merge.
+
+
+## Publicação de 24 de novembro de 2026
+
+O [PR da interface](https://github.com/bertasipedro2-svg/pethinho-paws-and-pillow/pull/1) foi integrado com autorização no commit `fb0953bd131b4cbdaed8297997d783eda2b55d12`. O [ponto de restauração da interface](https://github.com/bertasipedro2-svg/pethinho-paws-and-pillow/tree/restore/pethinho-before-release-20261124) preserva o commit anterior. O PR do banco segue separado.
+
+O [site oficial](https://pethinho-paws-and-pillow.lovable.app/) respondeu HTTP 200. Os arquivos JavaScript servidos nas rotas de equipe confirmam a versão com controles de acomodação, filtro de cadastro na agenda e relatório por data da baixa. Essa verificação pública não executou login, reserva ou baixa financeira. A aprovação compartilhada segue desabilitada. As sessões autenticadas e Safari em iPhone físico permanecem pendentes de homologação.
