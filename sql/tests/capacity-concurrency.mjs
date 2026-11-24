@@ -196,11 +196,22 @@ try {
   assert.equal(item.settled_on, null);
   assert.equal((await first.query("select count(*)::int n from public.finance_entries")).rows[0].n, 0);
   await assert.rejects(second.query("update public.finance_entries set amount_cents=1 where id=$1",[item.id]), {code:"42501"});
-  const settle = (client) => client.query(
-    "update public.finance_entries set settled_on=timezone('America/Sao_Paulo',now())::date where id=$1",[item.id],
+  const settle = (client, id = item.id) => client.query(
+    "update public.finance_entries set settled_on=timezone('America/Sao_Paulo',now())::date where id=$1",[id],
   );
   assert.equal((await settle(second)).rowCount,1);
   assert.equal((await settle(second)).rowCount,0);
+  const expense = (await second.query(
+    "insert into public.finance_entries(kind,description,amount_cents,due_on) values ('expense','fixture expense',1900,date '2025-12-15') returning id,settled_on",
+  )).rows[0];
+  assert.equal(expense.settled_on, null);
+  assert.equal((await settle(second, expense.id)).rowCount,1);
+  const { rows: [cashPeriod] } = await second.query(`
+    select sum(amount_cents)::int as amount
+    from public.finance_entries where kind='expense' and
+      settled_on=timezone('America/Sao_Paulo',now())::date and due_on=date '2025-12-15'
+  `);
+  assert.equal(cashPeriod.amount,1900);
   console.log("PASS: caixa restrito ao administrador, criação pendente e baixa única sem alterar o valor.");
   await control.query("begin isolation level repeatable read");
   await assert.rejects(write(control, pets[7], room2, 20, 22), {code:"40001"});

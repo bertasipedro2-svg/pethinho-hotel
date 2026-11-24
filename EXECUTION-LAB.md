@@ -28,3 +28,12 @@ Os SQLs em `sql/rollback/` restauram as funções e os grants anteriores ou susp
 A desativação usa a mesma trava de linha que a aprovação de reservas. Estadia em andamento impede desativação mesmo com saída prevista no passado. Reservas aprovadas, aguardando pagamento ou confirmadas com fim futuro também impedem a operação. A reativação preserva o histórico. Aprovação de acomodação compartilhada continua bloqueada.
 
 Ponto de restauração anterior à migração no Supabase de desenvolvimento: versão `20261124014424`, gatilho e função de desativação ausentes. O SQL desta etapa acrescenta somente esses dois objetos. A reversão em `sql/rollback/accommodation_availability_guard.sql` remove os objetos; nenhum registro é incluído, alterado ou removido pela migração. A suíte em PostgreSQL descartável verifica a reversão, os perfis e as duas ordens da corrida com espera real pela trava.
+
+| Ambiente | Verificação desta etapa |
+| --- | --- |
+| PostgreSQL local | `node sql/tests/capacity-concurrency.mjs` passou. Inclui concorrência de aprovação/desativação, permissões, reativação, cancelamento, confirmação, check-in, check-out, reversão, receita e despesa com baixa explícita. |
+| Supabase hospedado de desenvolvimento | Migração `20261124030036` aplicada. Gatilho ativo e função sem privilégio elevado ou EXECUTE direto para anônimo e autenticado. `sql/tests/hosted-accommodation-smoke.sql` passou por SQL nas regras de tutor, equipe e administrador. Dados fictícios descartados, sem sessão GoTrue. |
+| Interface | [Commit de homologação](https://github.com/bertasipedro2-svg/pethinho-paws-and-pillow/commit/01c0720b605b57c444902a87df21ac6f487d62d4). `tsc --noEmit`, 29 testes, build e lint dos arquivos alterados passaram. O lint geral ainda aponta formatação e avisos preexistentes. |
+| Chromium | `node scripts/mobile-lab.mjs` com perfil de iPhone 13 e `PETHINHO_TEST_VIEW=desktop` passaram com API simulada. Inclui agenda, cadastros, permissões de interface, relatórios e CSV. |
+
+[A alteração de esquema](https://github.com/bertasipedro2-svg/pethinho-hotel/commit/42d328ce37f1b58a014f6693f4f4aeb7a5e0bca1) está vinculada ao ponto de restauração acima. Ainda falta validar sessões autenticadas na prévia hospedada, Safari em iPhone físico, as regras de acomodação compartilhada e os termos comerciais. As branches seguem abertas para revisão. Nenhuma publicação ou merge.
