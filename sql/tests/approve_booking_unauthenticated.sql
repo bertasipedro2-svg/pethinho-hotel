@@ -1,0 +1,2 @@
+-- Regression: approval must reject requests without a JWT identity before touching bookings.
+DO $$ BEGIN IF auth.uid() IS NOT NULL THEN RAISE EXCEPTION 'Requires no JWT identity'; END IF; BEGIN PERFORM public.approve_booking('00000000-0000-0000-0000-000000000000'::uuid,'00000000-0000-0000-0000-000000000000'::uuid); RAISE EXCEPTION 'Unexpected approval'; EXCEPTION WHEN raise_exception THEN IF SQLERRM <> 'Not authorized' THEN RAISE; END IF; END; END $$;
