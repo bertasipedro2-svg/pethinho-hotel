@@ -52,12 +52,14 @@ export default function Admin(){
     if(roleError)throw roleError;
     if(!role||!["admin","staff"].includes(role.role)){if(active)setMsg("Acesso restrito à equipe autorizada.");return}
     // Consultas independentes de leitura: nenhuma reserva é criada ou ativada.
-    const [accommodationsResult,servicesResult]=await Promise.all([
+    const [accommodationsResult,servicesResult,availabilityResult]=await Promise.all([
      db.from("accommodations").select("id",{count:"exact",head:true}).eq("active",true),
      db.from("services").select("id",{count:"exact",head:true}).eq("active",true),
+     db.from("accommodation_availability").select("accommodation_id,accommodation_name,capacity,occupied_now,available_now,active").order("accommodation_name",{ascending:true}),
     ]);
     if(accommodationsResult.error)throw accommodationsResult.error;
-    if(servicesResult.error)throw servicesResult.error;\n    if(availabilityResult.error)throw availabilityResult.error;
+    if(servicesResult.error)throw servicesResult.error;
+    if(availabilityResult.error)throw availabilityResult.error;
     const all:Booking[]=[];
     const pageSize=500;
     let hasMore=true;
@@ -104,7 +106,10 @@ export default function Admin(){
    <p role="status">Resumo de {rows.length} reservas acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>
    {truncated&&<p role="alert">Limite de 10.000 reservas atingido. Os totais podem estar incompletos; exporte os dados para uma apuração completa.</p>}
    <button type="button" onClick={()=>{setLoading(true);setRefresh(n=>n+1)}}>Atualizar dados</button>
-   <section className="card" aria-labelledby="availability"><h2 id="availability">Disponibilidade atual</h2>\n    {availability.length===0?<p>Nenhuma acomodação retornada pela consulta segura.</p>:<ul>{availability.map(x=><li key={x.accommodation_id}>{x.accommodation_name}: {x.available_now} vaga(s) disponível(is) de {x.capacity} — ocupadas agora: {x.occupied_now}{!x.active?" (inativa)":""}</li>)}</ul>}\n   </section>\n   <section className="card" aria-labelledby="summary"><h2 id="summary">Resumo por situação</h2>
+   <section className="card" aria-labelledby="availability"><h2 id="availability">Disponibilidade atual</h2>
+    {availability.length===0?<p>Nenhuma acomodação retornada pela consulta segura.</p>:<ul>{availability.map(x=><li key={x.accommodation_id}>{x.accommodation_name}: {x.available_now} vaga(s) disponível(is) de {x.capacity} — ocupadas agora: {x.occupied_now}{!x.active?" (inativa)":""}</li>)}</ul>}
+   </section>
+   <section className="card" aria-labelledby="summary"><h2 id="summary">Resumo por situação</h2>
     <ul>{Object.entries(labels).map(([key,label])=><li key={key}>{label}: {stats.counts[key]||0}</li>)}</ul>
    </section>
    <section className="card" aria-labelledby="staying"><h2 id="staying">Hospedagens em andamento ({stats.staying.length})</h2>
