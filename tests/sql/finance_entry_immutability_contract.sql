@@ -11,5 +11,5 @@ select
       and t.tgname = 'trg_guard_finance_entry_settlement'
       and not t.tgenabled = 'D'
   ) as settlement_trigger_enabled,
-  has_function_privilege('anon', 'public.guard_finance_entry_update()', 'execute') = false as anon_execute_blocked,
-  has_function_privilege('authenticated', 'public.guard_finance_entry_update()', 'execute') as authenticated_execute_allowed;
+  has_function_privilege('anon', 'public.guard_finance_entry_settlement()', 'execute') = false as anon_execute_blocked,
+  has_function_privilege('authenticated', 'public.guard_finance_entry_settlement()', 'execute') as authenticated_execute_allowed;
