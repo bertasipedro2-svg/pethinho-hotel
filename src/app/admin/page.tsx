@@ -60,7 +60,7 @@ export default function Admin(){
     const pageSize=500;
     let hasMore=true;
     while(hasMore&&all.length<10000){
-     const{data,error}=await db.from("booking_calendar").select("booking_id,starts_at,ends_at,status,pet_name,accommodation_name").order("starts_at",{ascending:false}).order("id",{ascending:false}).range(all.length,all.length+pageSize-1);
+     const{data,error}=await db.from("booking_calendar").select("booking_id,starts_at,ends_at,status,pet_name,accommodation_name" ).order("starts_at",{ascending:false}).order("booking_id",{ascending:false}).range(all.length,all.length+pageSize-1);
      if(error)throw error;
      all.push(...(data||[]));
      hasMore=(data||[]).length===pageSize;
