@@ -6,9 +6,7 @@ type Booking={booking_id:string;starts_at:string;ends_at:string;status:string;pe
 type Availability={accommodation_id:string;accommodation_name:string;capacity:number;occupied_now:number;available_now:number;active:boolean};
 const fmt=(date:string)=>new Date(date).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
 const csvCell=(value:unknown)=>`"${String(value??"").replaceAll(`"`,`""`)}"`;
-const downloadBookingsCsv=(items:Booking[])=>{const header=["booking_id","pet_name","accommodation_name","starts_at","ends_at","status"];const body=items.map(x=>[x.booking_id,x.pet_name,x.accommodation_name,x.starts_at,x.ends_at,x.status].map(csvCell).join(",")).join("
-");const blob=new Blob([header.join(",")+"
-"+body],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`pethinho-bookings-${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url)};
+const downloadBookingsCsv=(items:Booking[])=>{const header=["booking_id","pet_name","accommodation_name","starts_at","ends_at","status"];const body=items.map(x=>[x.booking_id,x.pet_name,x.accommodation_name,x.starts_at,x.ends_at,x.status].map(csvCell).join(",")).join("\r\n");const csv="\uFEFF"+header.join(",")+"\r\n"+body;const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=`pethinho-bookings-${new Date().toISOString().slice(0,10)}.csv`;link.rel="noopener";document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url)};
 const labels:Record<string,string>={pending:"Pendente",approved:"Aprovada",awaiting_payment:"Aguardando pagamento",confirmed:"Confirmada",checked_in:"Hospedado",checked_out:"Check-out",completed:"Concluída",cancelled:"Cancelada",no_show:"Não compareceu"};
 export default function Admin(){
  const[allowed,setAllowed]=useState(false),[rows,setRows]=useState<Booking[]>([]);
