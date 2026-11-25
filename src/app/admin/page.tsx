@@ -3,6 +3,7 @@ import {useEffect,useMemo,useState} from "react";
 import {getSupabase} from "@/lib/supabase";
 
 type Booking={booking_id:string;starts_at:string;ends_at:string;status:string;pet_name:string;accommodation_name:string|null};
+type Availability={accommodation_id:string;accommodation_name:string;capacity:number;occupied_now:number;available_now:number;active:boolean};
 const fmt=(date:string)=>new Date(date).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
 const labels:Record<string,string>={pending:"Pendente",approved:"Aprovada",confirmed:"Confirmada",checked_in:"Hospedado",checked_out:"Check-out",completed:"Concluída",cancelled:"Cancelada",no_show:"Não compareceu"};
 export default function Admin(){
@@ -10,6 +11,7 @@ export default function Admin(){
  const[loading,setLoading]=useState(true),[msg,setMsg]=useState("Verificando permissões...");
  const[refresh,setRefresh]=useState(0),[truncated,setTruncated]=useState(false);
  const[readiness,setReadiness]=useState<{accommodations:number;services:number}|null>(null);
+ const[availability,setAvailability]=useState<Availability[]>([]);
  // Revalidar o acesso quando a sessão muda (inclusive logout em outra aba).
  useEffect(()=>{
   const db=getSupabase();
@@ -55,7 +57,7 @@ export default function Admin(){
      db.from("services").select("id",{count:"exact",head:true}).eq("active",true),
     ]);
     if(accommodationsResult.error)throw accommodationsResult.error;
-    if(servicesResult.error)throw servicesResult.error;
+    if(servicesResult.error)throw servicesResult.error;\n    if(availabilityResult.error)throw availabilityResult.error;
     const all:Booking[]=[];
     const pageSize=500;
     let hasMore=true;
@@ -74,7 +76,7 @@ export default function Admin(){
     const {data:currentRole,error:currentRoleError}=await db.from("staff_roles").select("role").eq("user_id",currentUser.id).maybeSingle();
     if(currentRoleError)throw currentRoleError;
     if(!currentRole||!["admin","staff"].includes(currentRole.role))throw new Error("Acesso administrativo revogado.");
-    if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setReadiness({accommodations:accommodationsResult.count??0,services:servicesResult.count??0});setMsg("");}
+    if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setReadiness({accommodations:accommodationsResult.count??0,services:servicesResult.count??0});setAvailability((availabilityResult.data||[]) as Availability[]);setMsg("");}
    }catch(e){if(active){setAllowed(false);setReadiness(null);setMsg(e instanceof Error?e.message:"Falha ao consultar reservas.");}}
    finally{if(active)setLoading(false)}
   }
@@ -102,7 +104,7 @@ export default function Admin(){
    <p role="status">Resumo de {rows.length} reservas acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>
    {truncated&&<p role="alert">Limite de 10.000 reservas atingido. Os totais podem estar incompletos; exporte os dados para uma apuração completa.</p>}
    <button type="button" onClick={()=>{setLoading(true);setRefresh(n=>n+1)}}>Atualizar dados</button>
-   <section className="card" aria-labelledby="summary"><h2 id="summary">Resumo por situação</h2>
+   <section className="card" aria-labelledby="availability"><h2 id="availability">Disponibilidade atual</h2>\n    {availability.length===0?<p>Nenhuma acomodação retornada pela consulta segura.</p>:<ul>{availability.map(x=><li key={x.accommodation_id}>{x.accommodation_name}: {x.available_now} vaga(s) disponível(is) de {x.capacity} — ocupadas agora: {x.occupied_now}{!x.active?" (inativa)":""}</li>)}</ul>}\n   </section>\n   <section className="card" aria-labelledby="summary"><h2 id="summary">Resumo por situação</h2>
     <ul>{Object.entries(labels).map(([key,label])=><li key={key}>{label}: {stats.counts[key]||0}</li>)}</ul>
    </section>
    <section className="card" aria-labelledby="staying"><h2 id="staying">Hospedagens em andamento ({stats.staying.length})</h2>
