@@ -6,7 +6,7 @@ type Booking={booking_id:string;starts_at:string;ends_at:string;status:string;pe
 type Availability={accommodation_id:string;accommodation_name:string;capacity:number;occupied_now:number;available_now:number;active:boolean};
 const fmt=(date:string)=>new Date(date).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
 const csvCell=(value:unknown)=>`"${String(value??"").replaceAll(`"`,`""`)}"`;
-const downloadBookingsCsv=(items:Booking[])=>{const header=["booking_id","pet_name","accommodation_name","starts_at","ends_at","status"];const body=items.map(x=>[x.booking_id,x.pet_name,x.accommodation_name,x.starts_at,x.ends_at,x.status].map(csvCell).join(","));const blob=new Blob([[header.join(","),...body].join("\
+const downloadBookingsCsv=(items:Booking[])=>{const header=["booking_id","pet_name","accommodation_name","starts_at","ends_at","status"];const body=items.map(x=>[x.booking_id,x.pet_name,x.accommodation_name,x.starts_at,x.ends_at,x.status].map(csvCell).join("\r\n"));const blob=new Blob([[header.join(","),...body].join("\
 ")],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`pethinho-bookings-${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url)};
 const labels:Record<string,string>={pending:"Pendente",approved:"Aprovada",awaiting_payment:"Aguardando pagamento",confirmed:"Confirmada",checked_in:"Hospedado",checked_out:"Check-out",completed:"Concluída",cancelled:"Cancelada",no_show:"Não compareceu"};
 export default function Admin(){
