@@ -14,13 +14,13 @@ export default function Admin(){
  const[allowed,setAllowed]=useState(false),[rows,setRows]=useState<Booking[]>([]);
  const[loading,setLoading]=useState(true),[msg,setMsg]=useState("Verificando permissões...");
  const[refresh,setRefresh]=useState(0),[truncated,setTruncated]=useState(false);
- const[readiness,setReadiness]=useState<{accommodations:number;services:number}|null>(null);
+ const[readiness,setReadiness]=useState<{accommodations:number;services:number}|null>(null),[lastUpdated,setLastUpdated]=useState<string|null>(null);
  const[availability,setAvailability]=useState<Availability[]>([]),[statusFilter,setStatusFilter]=useState("all");
  useEffect(()=>{
   const db=getSupabase();
   const {data:{subscription}}=db.auth.onAuthStateChange(event=>{
    if(event==="SIGNED_IN"||event==="SIGNED_OUT"||event==="USER_UPDATED"){
-    setAllowed(false);setRows([]);setReadiness(null);setLoading(true);setRefresh(n=>n+1);
+    setAllowed(false);setRows([]);setReadiness(null);setLastUpdated(null);setLoading(true);setRefresh(n=>n+1);
    }
   });
   const revalidate=()=>{
@@ -33,7 +33,7 @@ export default function Admin(){
  useEffect(()=>{
   let active=true;
   async function load(){
-   if(active){setLoading(true);setAllowed(false);setRows([]);setReadiness(null);setTruncated(false);setMsg("Verificando permissões...");}
+   if(active){setLoading(true);setAllowed(false);setRows([]);setReadiness(null);setLastUpdated(null);setTruncated(false);setMsg("Verificando permissões...");}
    try{
     const db=getSupabase();
     const{data:{user},error:authError}=await db.auth.getUser();
@@ -62,7 +62,7 @@ export default function Admin(){
     const {data:currentRole,error:currentRoleError}=await db.from("staff_roles").select("role").eq("user_id",currentUser.id).maybeSingle();
     if(currentRoleError)throw currentRoleError;
     if(!currentRole||!["admin","staff"].includes(currentRole.role))throw new Error("Acesso administrativo revogado.");
-    if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setReadiness({accommodations:accommodationsResult.count??0,services:servicesResult.count??0});setAvailability((availabilityResult.data||[]) as Availability[]);setMsg("");}
+    if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setReadiness({accommodations:accommodationsResult.count??0,services:servicesResult.count??0});setAvailability((availabilityResult.data||[]) as Availability[]);setLastUpdated(new Date().toISOString());setMsg("");}
    }catch(e){if(active){setAllowed(false);setReadiness(null);setMsg(e instanceof Error?e.message:"Falha ao consultar reservas.");}}
    finally{if(active)setLoading(false)}
   }
@@ -82,10 +82,10 @@ export default function Admin(){
   !allowed?<p role="alert">{msg}</p>:
   <>
    {readiness&&<section className="card" aria-labelledby="readiness"><h2 id="readiness">Prontidão operacional</h2><p>Acomodações ativas: {readiness.accommodations}. Serviços ativos: {readiness.services}.</p>{(readiness.accommodations===0||readiness.services===0)&&<p role="alert">Homologação pendente: não há {readiness.accommodations===0?"acomodações ativas":"capacidade validada"}{readiness.services===0?" e serviços ativos":""}. Não liberar reservas comerciais.</p>}<p>Estes indicadores não comprovam capacidade disponível nem autorização para operar; validar conflitos e permissões antes da liberação.</p></section>}
-   <p role="status">Resumo de {visibleRows.length} reservas exibidas de {rows.length} acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>
+   <p role="status">Resumo de {visibleRows.length} reservas exibidas de {rows.length} acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>{lastUpdated&&<p role="status">Última atualização: {fmt(lastUpdated)}</p>}
    {truncated&&<p role="alert">Limite de 10.000 reservas atingido. Os totais podem estar incompletos; exporte os dados para uma apuração completa.</p>}
    <div><label htmlFor="status-filter">Filtrar reservas: </label><select id="status-filter" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="all">Todas</option>{Object.entries(labels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></div>
-   <div><button type="button" onClick={()=>{setLoading(true);setRefresh(n=>n+1)}} disabled={loading}>Atualizar dados</button> <button type="button" onClick={()=>downloadBookingsCsv(visibleRows)} disabled={visibleRows.length===0}>Exportar CSV do filtro</button></div>
+   <div><button type="button" onClick={()=>{setLoading(true);setRefresh(n=>n+1)}} disabled={loading} aria-label="Atualizar dados e permissões">Atualizar dados</button> <button type="button" onClick={()=>downloadBookingsCsv(visibleRows)} disabled={visibleRows.length===0}>Exportar CSV do filtro</button></div>
    <section className="card" aria-labelledby="availability"><h2 id="availability">Disponibilidade atual</h2>{availability.length===0?<p>Nenhuma acomodação retornada pela consulta segura.</p>:<ul>{availability.map(x=><li key={x.accommodation_id}>{x.accommodation_name}: {x.available_now} vaga(s) disponível(is) de {x.capacity} — ocupadas agora: {x.occupied_now}{!x.active?" (inativa)":""}</li>)}</ul>}</section>
    <section className="card" aria-labelledby="summary"><h2 id="summary">Resumo por situação</h2><ul>{Object.entries(labels).map(([key,label])=><li key={key}>{label}: {stats.counts[key]||0}</li>)}</ul></section>
    <section className="card" aria-labelledby="staying"><h2 id="staying">Hospedagens em andamento ({stats.staying.length})</h2>{stats.staying.length===0?<p>Nenhum check-in em andamento nesta consulta.</p>:<ul>{stats.staying.map(x=><li key={x.booking_id}>{x.pet_name} — {x.accommodation_name||"Acomodação não atribuída"} — Entrada {fmt(x.starts_at)} — saída prevista {fmt(x.ends_at)}</li>)}</ul>}</section>
