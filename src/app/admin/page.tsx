@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from "react";
 import {getSupabase} from "@/lib/supabase";
 
-type Booking={id:string;starts_at:string;ends_at:string;status:string};
+type Booking={booking_id:string;starts_at:string;ends_at:string;status:string;pet_name:string;accommodation_name:string|null};
 const fmt=(date:string)=>new Date(date).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
 const labels:Record<string,string>={pending:"Pendente",approved:"Aprovada",confirmed:"Confirmada",checked_in:"Hospedado",checked_out:"Check-out",completed:"Concluída",cancelled:"Cancelada",no_show:"Não compareceu"};
 export default function Admin(){
@@ -60,7 +60,7 @@ export default function Admin(){
     const pageSize=500;
     let hasMore=true;
     while(hasMore&&all.length<10000){
-     const{data,error}=await db.from("bookings").select("id,starts_at,ends_at,status").order("starts_at",{ascending:false}).order("id",{ascending:false}).range(all.length,all.length+pageSize-1);
+     const{data,error}=await db.from("booking_calendar").select("booking_id,starts_at,ends_at,status,pet_name,accommodation_name").order("starts_at",{ascending:false}).order("id",{ascending:false}).range(all.length,all.length+pageSize-1);
      if(error)throw error;
      all.push(...(data||[]));
      hasMore=(data||[]).length===pageSize;
@@ -106,10 +106,10 @@ export default function Admin(){
     <ul>{Object.entries(labels).map(([key,label])=><li key={key}>{label}: {stats.counts[key]||0}</li>)}</ul>
    </section>
    <section className="card" aria-labelledby="staying"><h2 id="staying">Hospedagens em andamento ({stats.staying.length})</h2>
-    {stats.staying.length===0?<p>Nenhum check-in em andamento nesta consulta.</p>:<ul>{stats.staying.map(x=><li key={x.id}>Entrada {fmt(x.starts_at)} — saída prevista {fmt(x.ends_at)}</li>)}</ul>}
+    {stats.staying.length===0?<p>Nenhum check-in em andamento nesta consulta.</p>:<ul>{stats.staying.map(x=><li key={x.booking_id}>{x.pet_name} — {x.accommodation_name||"Acomodação não atribuída"} — Entrada {fmt(x.starts_at)} — saída prevista {fmt(x.ends_at)}</li>)}</ul>}
    </section>
    <section className="card" aria-labelledby="upcoming"><h2 id="upcoming">Próximas entradas — 7 dias ({stats.upcoming.length})</h2>
-    {stats.upcoming.length===0?<p>Nenhuma entrada confirmada ou aprovada nesta consulta.</p>:<ul>{stats.upcoming.map(x=><li key={x.id}>{fmt(x.starts_at)} — {labels[x.status]||x.status}</li>)}</ul>}
+    {stats.upcoming.length===0?<p>Nenhuma entrada confirmada ou aprovada nesta consulta.</p>:<ul>{stats.upcoming.map(x=><li key={x.booking_id}>{x.pet_name} — {x.accommodation_name||"Acomodação não atribuída"} — {fmt(x.starts_at)} — {labels[x.status]||x.status}</li>)}</ul>}
    </section>
    <p>Este painel é somente de consulta. Aprovações e transições devem ser executadas pelas funções protegidas do banco após homologação.</p>
   </>}
