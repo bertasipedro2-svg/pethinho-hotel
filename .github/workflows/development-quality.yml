@@ -39,3 +39,18 @@ jobs:
           grep -Fq 'setLastUpdated(new Date().toISOString())' src/app/admin/page.tsx
           grep -Fq 'availabilityInvalid' src/app/admin/page.tsx
           grep -Fq 'truncated' src/app/admin/page.tsx
+
+  operational-rpc-security-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify operational RPC security contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/operational_rpc_security_contract.sql
+          grep -Fq "all_search_path_hardened" tests/sql/operational_rpc_security_contract.sql
+          grep -Fq "public_execute_revoked" tests/sql/operational_rpc_security_contract.sql
+          grep -Fq "anon_execute_revoked" tests/sql/operational_rpc_security_contract.sql
+          grep -Fq "authenticated_execute_preserved" tests/sql/operational_rpc_security_contract.sql
