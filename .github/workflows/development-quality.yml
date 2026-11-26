@@ -71,3 +71,15 @@ jobs:
           grep -Fq "booking_capacity_guard" tests/sql/booking_capacity_safety_contract.sql
           grep -Fq "invalid_booking_intervals" tests/sql/booking_capacity_safety_contract.sql
           grep -Fq "negative_capacity" tests/sql/booking_capacity_safety_contract.sql
+
+  readiness-export-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify export requires operational readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0;' src/app/admin/page.tsx
+          grep -Fq 'readinessInvalid' src/app/admin/page.tsx
