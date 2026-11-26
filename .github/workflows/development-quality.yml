@@ -174,3 +174,18 @@ jobs:
           grep -Fq "public_execute_revoked" tests/sql/request_booking_rpc_security_contract.sql
           grep -Fq "anon_execute_revoked" tests/sql/request_booking_rpc_security_contract.sql
           grep -Fq "authenticated_execute_preserved" tests/sql/request_booking_rpc_security_contract.sql
+
+  booking-schema-integrity-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify booking schema integrity contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/booking_schema_integrity_contract.sql
+          grep -Fq "required_schema_present" tests/sql/booking_schema_integrity_contract.sql
+          grep -Fq "invalid_booking_intervals" tests/sql/booking_schema_integrity_contract.sql
+          grep -Fq "negative_capacity" tests/sql/booking_schema_integrity_contract.sql
+          grep -Fq "contract_passed" tests/sql/booking_schema_integrity_contract.sql
