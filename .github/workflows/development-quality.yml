@@ -189,3 +189,16 @@ jobs:
           grep -Fq "invalid_booking_intervals" tests/sql/booking_schema_integrity_contract.sql
           grep -Fq "negative_capacity" tests/sql/booking_schema_integrity_contract.sql
           grep -Fq "contract_passed" tests/sql/booking_schema_integrity_contract.sql
+  booking-capacity-trigger-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify booking capacity enforcement contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/booking_capacity_trigger_contract.sql
+          grep -Fq "capacity_trigger_present" tests/sql/booking_capacity_trigger_contract.sql
+          grep -Fq "capacity_function_present" tests/sql/booking_capacity_trigger_contract.sql
+          grep -Fq "contract_passed" tests/sql/booking_capacity_trigger_contract.sql
