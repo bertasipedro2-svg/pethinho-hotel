@@ -37,7 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           test -f src/app/admin/page.tsx
-          grep -Fq 'disabled={visibleRows.length===0||truncated||staleData||availabilityInvalid}' src/app/admin/page.tsx
+          grep -Fq 'disabled={visibleRows.length===0||truncated||staleData||availabilityInvalid||readinessInvalid}' src/app/admin/page.tsx
           grep -Fq 'setLastUpdated(new Date().toISOString())' src/app/admin/page.tsx
           grep -Fq 'availabilityInvalid' src/app/admin/page.tsx
           grep -Fq 'truncated' src/app/admin/page.tsx
