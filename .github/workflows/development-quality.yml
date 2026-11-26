@@ -96,3 +96,17 @@ jobs:
           test -f tests/sql/extension_schema_contract.sql
           grep -Fq "installed_schema" tests/sql/extension_schema_contract.sql
           grep -Fq "moved_out_of_public" tests/sql/extension_schema_contract.sql
+
+
+  finance-schema-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify finance schema contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/finance_schema_contract.sql
+          grep -Fq "finance_entries" tests/sql/finance_schema_contract.sql
+          grep -Fq "bookings" tests/sql/finance_schema_contract.sql
