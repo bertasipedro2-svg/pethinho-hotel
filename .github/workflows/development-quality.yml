@@ -80,7 +80,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'const availabilityReady=availability.some(x=>x.active);' src/app/admin/page.tsx\n          grep -Fq 'const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0||!availabilityReady;' src/app/admin/page.tsx
+          grep -Fq 'const availabilityReady=availability.some(x=>x.active);' src/app/admin/page.tsx
+          grep -Fq 'const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0||!availabilityReady;' src/app/admin/page.tsx
           grep -Fq 'readinessInvalid' src/app/admin/page.tsx
 
   extension-schema-contract:
