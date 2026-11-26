@@ -54,3 +54,18 @@ jobs:
           grep -Fq "public_execute_revoked" tests/sql/operational_rpc_security_contract.sql
           grep -Fq "anon_execute_revoked" tests/sql/operational_rpc_security_contract.sql
           grep -Fq "authenticated_execute_preserved" tests/sql/operational_rpc_security_contract.sql
+
+  booking-safety-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify booking safety contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/booking_capacity_safety_contract.sql
+          grep -Fq "bookings_valid_interval_chk" tests/sql/booking_capacity_safety_contract.sql
+          grep -Fq "booking_capacity_guard" tests/sql/booking_capacity_safety_contract.sql
+          grep -Fq "invalid_booking_intervals" tests/sql/booking_capacity_safety_contract.sql
+          grep -Fq "negative_capacity" tests/sql/booking_capacity_safety_contract.sql
