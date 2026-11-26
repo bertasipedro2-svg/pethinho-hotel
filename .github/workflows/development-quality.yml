@@ -140,3 +140,19 @@ jobs:
           grep -Fq "finance_insert_admin_only" tests/sql/finance_rls_admin_only_contract.sql
           grep -Fq "finance_settle_admin_only" tests/sql/finance_rls_admin_only_contract.sql
           grep -Fq "finance_non_admin_policy_present" tests/sql/finance_rls_admin_only_contract.sql
+
+  booking-rpc-security-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify booking RPC security contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/booking_rpc_security_contract.sql
+          grep -Fq "all_booking_rpcs_hardened" tests/sql/booking_rpc_security_contract.sql
+          grep -Fq "all_booking_rpcs_staff_guarded" tests/sql/booking_rpc_security_contract.sql
+          grep -Fq "public_execute_revoked" tests/sql/booking_rpc_security_contract.sql
+          grep -Fq "anon_execute_revoked" tests/sql/booking_rpc_security_contract.sql
+          grep -Fq "authenticated_execute_preserved" tests/sql/booking_rpc_security_contract.sql
