@@ -127,3 +127,19 @@ jobs:
             echo "Automatic publication from development is not allowed"
             exit 1
           fi
+
+
+  finance-rls-admin-only-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify finance is admin-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/finance_rls_admin_only_contract.sql
+          grep -Fq "finance_select_admin_only" tests/sql/finance_rls_admin_only_contract.sql
+          grep -Fq "finance_insert_admin_only" tests/sql/finance_rls_admin_only_contract.sql
+          grep -Fq "finance_settle_admin_only" tests/sql/finance_rls_admin_only_contract.sql
+          grep -Fq "finance_non_admin_policy_present" tests/sql/finance_rls_admin_only_contract.sql
