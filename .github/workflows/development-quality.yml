@@ -110,3 +110,20 @@ jobs:
           test -f tests/sql/finance_schema_contract.sql
           grep -Fq "finance_entries" tests/sql/finance_schema_contract.sql
           grep -Fq "bookings" tests/sql/finance_schema_contract.sql
+
+
+  publication-safety-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Ensure homologation publication is manual-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .github/workflows/pages.yml
+          grep -Fq 'workflow_dispatch:' .github/workflows/pages.yml
+          if grep -Fq 'branches: [development]' .github/workflows/pages.yml; then
+            echo "Automatic publication from development is not allowed"
+            exit 1
+          fi
