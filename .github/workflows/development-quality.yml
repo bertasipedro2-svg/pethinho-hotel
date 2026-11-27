@@ -41,6 +41,7 @@ jobs:
           grep -Fq 'availabilityInvalid' src/app/admin/page.tsx
           grep -Fq 'Number.isFinite(value)' src/app/admin/page.tsx
           grep -Fq 'truncated' src/app/admin/page.tsx
+          grep -Fq 'setInterval(()=>setNow(Date.now()),60_000)' src/app/admin/page.tsx
 
   operational-rpc-security-contract:
     runs-on: ubuntu-latest
