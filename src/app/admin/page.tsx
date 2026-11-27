@@ -20,7 +20,7 @@ export default function Admin(){
  useEffect(()=>{const timer=window.setInterval(()=>setNow(Date.now()),60_000);return()=>window.clearInterval(timer)},[]);
  const lastUpdatedMs=lastUpdated?new Date(lastUpdated).getTime():NaN;
  const freshnessInvalid=!Number.isFinite(lastUpdatedMs)||lastUpdatedMs>now||now-lastUpdatedMs>5*60*1000;
- const staleData=!!lastUpdated&&freshnessInvalid;
+ const staleData=freshnessInvalid;
  useEffect(()=>{
   const db=getSupabase();
   const {data:{subscription}}=db.auth.onAuthStateChange(event=>{
@@ -94,7 +94,7 @@ export default function Admin(){
   !allowed?<p role="alert">{msg}</p>:
   <>
    {readiness&&<section className="card" aria-labelledby="readiness"><h2 id="readiness">Prontidão operacional</h2><p>Acomodações ativas: {readiness.accommodations}. Serviços ativos: {readiness.services}.</p>{(readiness.accommodations===0||readiness.services===0||availability.length===0)&&<p role="alert">Homologação pendente: não há {readiness.accommodations===0?"acomodações ativas":availabilityCoverageInvalid?"cobertura completa da disponibilidade":!availabilityReady?"disponibilidade ativa retornada":"capacidade validada"}{readiness.services===0?" e serviços ativos":""}. Não liberar reservas comerciais.</p>}<p>Estes indicadores não comprovam capacidade disponível nem autorização para operar; validar conflitos e permissões antes da liberação.</p></section>}
-   <p role="status">Resumo de {visibleRows.length} reservas exibidas de {rows.length} acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>{lastUpdated&&<p role="status">Última atualização: {fmt(lastUpdated)}{staleData?" — dados possivelmente desatualizados; atualize antes de exportar.":""}</p>}
+   <p role="status">Resumo de {visibleRows.length} reservas exibidas de {rows.length} acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>{lastUpdated?<p role="status">Última atualização: {fmt(lastUpdated)}{staleData?" — dados possivelmente desatualizados; atualize antes de exportar.":""}</p>:freshnessInvalid?<p role="alert">A consulta ainda não possui um timestamp válido. Atualize os dados antes de exportar.</p>:null}
    {staleData&&<p role="alert">A exportação CSV foi bloqueada porque a consulta está inválida, futura ou tem mais de 5 minutos. Atualize os dados para gerar um relatório recente.</p>}
    {truncated&&<p role="alert">Limite de 10.000 reservas atingido. O exportador CSV foi desativado para evitar gerar um relatório incompleto; refine o filtro ou implemente paginação antes de exportar.</p>}
    {availabilityInvalid&&<p role="alert">A disponibilidade retornada contém valores inconsistentes. A exportação CSV foi bloqueada até a equipe validar a capacidade no banco.</p>}
