@@ -70,7 +70,7 @@ export default function Admin(){
   void load(); return()=>{active=false};
  },[refresh]);
  const visibleRows=useMemo(()=>statusFilter==="all"?rows:rows.filter(row=>row.status===statusFilter),[rows,statusFilter]);
- const availabilityInvalid=useMemo(()=>availability.some(x=>x.capacity<0||x.occupied_now<0||x.available_now<0||x.occupied_now+x.available_now>x.capacity),[availability]);
+ const availabilityInvalid=useMemo(()=>availability.some(x=>[x.capacity,x.occupied_now,x.available_now].some(value=>!Number.isFinite(value))||x.capacity<0||x.occupied_now<0||x.available_now<0||x.occupied_now+x.available_now>x.capacity),[availability]);
  const availabilityReady=availability.some(x=>x.active);
  const activeAvailability=availability.filter(x=>x.active);
  const activeAvailabilityIds=new Set(activeAvailability.map(x=>x.accommodation_id));
