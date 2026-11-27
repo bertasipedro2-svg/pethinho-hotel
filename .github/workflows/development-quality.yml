@@ -382,3 +382,18 @@ jobs:
           grep -Fq 'const currentNow=now;' src/app/admin/page.tsx
           grep -Fq '},[rows,statusFilter,windowFilter,now]);' src/app/admin/page.tsx
           grep -Fq '},[visibleRows,now]);' src/app/admin/page.tsx
+
+
+  admin-booking-required-fields-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify booking required-fields guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_booking_required_fields_contract.sql
+          grep -Fq 'const bookingInvalid=useMemo' src/app/admin/page.tsx
+          grep -Fq '!row.status' src/app/admin/page.tsx
+          grep -Fq '!row.pet_name.trim()' src/app/admin/page.tsx
