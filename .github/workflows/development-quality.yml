@@ -343,3 +343,18 @@ jobs:
           test -f tests/sql/admin_export_missing_timestamp_contract.sql
           grep -Fq 'const staleData=freshnessInvalid;' src/app/admin/page.tsx
           grep -Fq 'A consulta ainda não possui um timestamp válido.' src/app/admin/page.tsx
+
+
+  admin-calendar-window-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify reservation calendar window filter
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'windowFilter==="7"?now+7*86400000:windowFilter==="30"?now+30*86400000:null' src/app/admin/page.tsx
+          grep -Fq 'id="window-filter"' src/app/admin/page.tsx
+          grep -Fq 'Próximos 7 dias' src/app/admin/page.tsx
+          grep -Fq 'Próximos 30 dias' src/app/admin/page.tsx
