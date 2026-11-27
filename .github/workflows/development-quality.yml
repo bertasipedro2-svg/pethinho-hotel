@@ -356,3 +356,17 @@ jobs:
           set -euo pipefail
           test -f tests/sql/admin_calendar_window_future_bound_contract.sql
           grep -Fq 'Number.isFinite(startsAt)&&startsAt>=now&&startsAt<=end' src/app/admin/page.tsx
+
+  admin-calendar-live-clock-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify live calendar clock dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_calendar_live_clock_contract.sql
+          grep -Fq 'const currentNow=now;' src/app/admin/page.tsx
+          grep -Fq '},[rows,statusFilter,windowFilter,now]);' src/app/admin/page.tsx
+          grep -Fq '},[visibleRows,now]);' src/app/admin/page.tsx
