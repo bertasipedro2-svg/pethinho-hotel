@@ -16,7 +16,9 @@ export default function Admin(){
  const[refresh,setRefresh]=useState(0),[truncated,setTruncated]=useState(false);
  const[readiness,setReadiness]=useState<{accommodations:number;services:number}|null>(null),[lastUpdated,setLastUpdated]=useState<string|null>(null);
  const[availability,setAvailability]=useState<Availability[]>([]),[statusFilter,setStatusFilter]=useState("all");
- const staleData=!!lastUpdated&&(Date.now()-new Date(lastUpdated).getTime()>5*60*1000);
+ const[now,setNow]=useState(()=>Date.now());
+ useEffect(()=>{const timer=window.setInterval(()=>setNow(Date.now()),60_000);return()=>window.clearInterval(timer)},[]);
+ const staleData=!!lastUpdated&&(now-new Date(lastUpdated).getTime()>5*60*1000);
  useEffect(()=>{
   const db=getSupabase();
   const {data:{subscription}}=db.auth.onAuthStateChange(event=>{
