@@ -329,3 +329,17 @@ grep -Fq 'const safe=/^[=+\\-@]/.test(raw)?String.fromCharCode(39)+raw:raw;' src
           grep -Fq 'const ids=new Set<string>()' src/app/admin/page.tsx
           grep -Fq 'const duplicate=!x.accommodation_id||ids.has(x.accommodation_id)' src/app/admin/page.tsx
           grep -Fq 'availabilityInvalid' src/app/admin/page.tsx
+
+
+  admin-export-missing-timestamp-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify missing timestamp export guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_export_missing_timestamp_contract.sql
+          grep -Fq 'const staleData=freshnessInvalid;' src/app/admin/page.tsx
+          grep -Fq 'A consulta ainda não possui um timestamp válido.' src/app/admin/page.tsx
