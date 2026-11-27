@@ -5,7 +5,7 @@ import {getSupabase} from "@/lib/supabase";
 type Booking={booking_id:string;starts_at:string;ends_at:string;status:string;pet_name:string;accommodation_name:string|null};
 type Availability={accommodation_id:string;accommodation_name:string;capacity:number;occupied_now:number;available_now:number;active:boolean};
 const fmt=(date:string)=>new Date(date).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
-const csvCell=(value:unknown)=>{const raw=String(value??"");const safe=/^[=+\-@]/.test(raw)?String.fromCharCode(39)+raw:raw;return `"${safe.replaceAll(`"`,`""`)}"`;};
+const csvCell=(value:unknown)=>{const raw=String(value??"");const formulaCandidate=raw.trimStart();const safe=/^[=+\-@]/.test(formulaCandidate)?String.fromCharCode(39)+raw:raw;return `"${safe.replaceAll(`"`,`""`)}"`;};
 const downloadBookingsCsv=(items:Booking[])=>{const header=["booking_id","pet_name","accommodation_name","starts_at","ends_at","status"];const body=items.map(x=>[x.booking_id,x.pet_name,x.accommodation_name,x.starts_at,x.ends_at,x.status].map(csvCell).join(",")).join("\r
 ");const csv="\uFEFF"+header.join(",")+"\r
 "+body;const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=`pethinho-bookings-${new Date().toISOString().slice(0,10)}.csv`;link.rel="noopener";document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url)};
