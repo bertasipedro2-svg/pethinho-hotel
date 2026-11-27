@@ -265,3 +265,23 @@ jobs:
           grep -Fq "all_admin_rpcs_staff_guarded" tests/sql/admin_booking_rpc_acl_contract.sql
           grep -Fq "authenticated_execute_revoked" tests/sql/admin_booking_rpc_acl_contract.sql
           grep -Fq "contract_passed" tests/sql/admin_booking_rpc_acl_contract.sql
+
+
+  request-booking-ownership-acl-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify request booking ownership and ACL contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/request_booking_ownership_acl_contract.sql
+          grep -Fq "request_booking_present" tests/sql/request_booking_ownership_acl_contract.sql
+          grep -Fq "search_path_hardened" tests/sql/request_booking_ownership_acl_contract.sql
+          grep -Fq "auth_guard_present" tests/sql/request_booking_ownership_acl_contract.sql
+          grep -Fq "owner_guard_present" tests/sql/request_booking_ownership_acl_contract.sql
+          grep -Fq "public_execute_revoked" tests/sql/request_booking_ownership_acl_contract.sql
+          grep -Fq "anon_execute_revoked" tests/sql/request_booking_ownership_acl_contract.sql
+          grep -Fq "authenticated_execute_preserved" tests/sql/request_booking_ownership_acl_contract.sql
+          grep -Fq "contract_passed" tests/sql/request_booking_ownership_acl_contract.sql
