@@ -202,3 +202,20 @@ jobs:
           grep -Fq "capacity_trigger_present" tests/sql/booking_capacity_trigger_contract.sql
           grep -Fq "capacity_function_present" tests/sql/booking_capacity_trigger_contract.sql
           grep -Fq "contract_passed" tests/sql/booking_capacity_trigger_contract.sql
+  booking-lifecycle-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify check-in and check-out lifecycle contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/booking_lifecycle_contract.sql
+          grep -Fq "bookings_status_check" tests/sql/booking_lifecycle_contract.sql
+          grep -Fq "bookings_operational_accommodation_required" tests/sql/booking_lifecycle_contract.sql
+          grep -Fq "bookings_valid_interval_chk" tests/sql/booking_lifecycle_contract.sql
+          grep -Fq "checked_in" tests/sql/booking_lifecycle_contract.sql
+          grep -Fq "checked_out" tests/sql/booking_lifecycle_contract.sql
+          grep -Fq "contract_passed" tests/sql/booking_lifecycle_contract.sql
+
