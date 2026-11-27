@@ -250,3 +250,18 @@ jobs:
           grep -Fq "invalid_settlement_dates" tests/sql/finance_settlement_integrity_contract.sql
           grep -Fq "contract_passed" tests/sql/finance_settlement_integrity_contract.sql
 
+
+  admin-booking-rpc-acl-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify admin booking RPC ACL contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_booking_rpc_acl_contract.sql
+          grep -Fq "all_admin_rpcs_hardened" tests/sql/admin_booking_rpc_acl_contract.sql
+          grep -Fq "all_admin_rpcs_staff_guarded" tests/sql/admin_booking_rpc_acl_contract.sql
+          grep -Fq "authenticated_execute_revoked" tests/sql/admin_booking_rpc_acl_contract.sql
+          grep -Fq "contract_passed" tests/sql/admin_booking_rpc_acl_contract.sql
