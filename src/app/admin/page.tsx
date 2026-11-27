@@ -72,7 +72,10 @@ export default function Admin(){
  const visibleRows=useMemo(()=>statusFilter==="all"?rows:rows.filter(row=>row.status===statusFilter),[rows,statusFilter]);
  const availabilityInvalid=useMemo(()=>availability.some(x=>x.capacity<0||x.occupied_now<0||x.available_now<0||x.occupied_now+x.available_now>x.capacity),[availability]);
  const availabilityReady=availability.some(x=>x.active);
- const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0||!availabilityReady;
+ const activeAvailability=availability.filter(x=>x.active);
+ const activeAvailabilityIds=new Set(activeAvailability.map(x=>x.accommodation_id));
+ const availabilityCoverageInvalid=!readiness||activeAvailability.length!==readiness.accommodations||activeAvailabilityIds.size!==activeAvailability.length;
+ const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0||!availabilityReady||availabilityCoverageInvalid;
  const stats=useMemo(()=>{
   const counts:Record<string,number>={}; for(const row of visibleRows)counts[row.status]=(counts[row.status]||0)+1;
   const now=Date.now();
@@ -85,7 +88,7 @@ export default function Admin(){
   {loading?<p role="status">Carregando dados e permissões...</p>:
   !allowed?<p role="alert">{msg}</p>:
   <>
-   {readiness&&<section className="card" aria-labelledby="readiness"><h2 id="readiness">Prontidão operacional</h2><p>Acomodações ativas: {readiness.accommodations}. Serviços ativos: {readiness.services}.</p>{(readiness.accommodations===0||readiness.services===0||availability.length===0)&&<p role="alert">Homologação pendente: não há {readiness.accommodations===0?"acomodações ativas":!availabilityReady?"disponibilidade ativa retornada":"capacidade validada"}{readiness.services===0?" e serviços ativos":""}. Não liberar reservas comerciais.</p>}<p>Estes indicadores não comprovam capacidade disponível nem autorização para operar; validar conflitos e permissões antes da liberação.</p></section>}
+   {readiness&&<section className="card" aria-labelledby="readiness"><h2 id="readiness">Prontidão operacional</h2><p>Acomodações ativas: {readiness.accommodations}. Serviços ativos: {readiness.services}.</p>{(readiness.accommodations===0||readiness.services===0||availability.length===0)&&<p role="alert">Homologação pendente: não há {readiness.accommodations===0?"acomodações ativas":availabilityCoverageInvalid?"cobertura completa da disponibilidade":!availabilityReady?"disponibilidade ativa retornada":"capacidade validada"}{readiness.services===0?" e serviços ativos":""}. Não liberar reservas comerciais.</p>}<p>Estes indicadores não comprovam capacidade disponível nem autorização para operar; validar conflitos e permissões antes da liberação.</p></section>}
    <p role="status">Resumo de {visibleRows.length} reservas exibidas de {rows.length} acessíveis à equipe. Dados sujeitos às permissões do Supabase; não é um relatório financeiro.</p>{lastUpdated&&<p role="status">Última atualização: {fmt(lastUpdated)}{staleData?" — dados possivelmente desatualizados; atualize antes de exportar.":""}</p>}
    {staleData&&<p role="alert">A exportação CSV foi bloqueada porque a consulta tem mais de 5 minutos. Atualize os dados para gerar um relatório recente.</p>}
    {truncated&&<p role="alert">Limite de 10.000 reservas atingido. O exportador CSV foi desativado para evitar gerar um relatório incompleto; refine o filtro ou implemente paginação antes de exportar.</p>}
