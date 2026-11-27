@@ -10,7 +10,7 @@ with fn as (
   join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public'
     and p.proname='request_booking'
-    and p.proargtypes::regtype[] = ARRAY['uuid'::regtype,'uuid'::regtype,'timestamp with time zone'::regtype,'timestamp with time zone'::regtype,'text'::regtype]
+    and p.pronargs = 5
 )
 select
   count(*)=1 as request_booking_present,
