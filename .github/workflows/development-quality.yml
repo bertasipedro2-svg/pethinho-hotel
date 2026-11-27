@@ -221,3 +221,17 @@ jobs:
           grep -Fq "checked_out" tests/sql/booking_lifecycle_contract.sql
           grep -Fq "contract_passed" tests/sql/booking_lifecycle_contract.sql
 
+  availability-view-integrity-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify availability view integrity contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/availability_view_integrity_contract.sql
+          grep -Fq "availability_view_present" tests/sql/availability_view_integrity_contract.sql
+          grep -Fq "availability_duplicate_ids" tests/sql/availability_view_integrity_contract.sql
+          grep -Fq "availability_values_consistent" tests/sql/availability_view_integrity_contract.sql
+          grep -Fq "availability_contract_passed" tests/sql/availability_view_integrity_contract.sql
