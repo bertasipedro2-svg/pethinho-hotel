@@ -397,3 +397,17 @@ jobs:
           grep -Fq 'const bookingInvalid=useMemo' src/app/admin/page.tsx
           grep -Fq '!row.status' src/app/admin/page.tsx
           grep -Fq '!row.pet_name.trim()' src/app/admin/page.tsx
+
+
+  admin-csv-whitespace-formula-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify whitespace-prefixed CSV formula neutralization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_csv_whitespace_formula_contract.sql
+          grep -Fq 'const formulaCandidate=raw.trimStart();' src/app/admin/page.tsx
+          grep -Fq 'const safe=/^[=+\\-@]/.test(formulaCandidate)?String.fromCharCode(39)+raw:raw;' src/app/admin/page.tsx
