@@ -285,3 +285,16 @@ jobs:
           grep -Fq "anon_execute_revoked" tests/sql/request_booking_ownership_acl_contract.sql
           grep -Fq "authenticated_execute_preserved" tests/sql/request_booking_ownership_acl_contract.sql
           grep -Fq "contract_passed" tests/sql/request_booking_ownership_acl_contract.sql
+
+  admin-csv-formula-injection-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify CSV formula neutralization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_csv_formula_injection_contract.sql
+          grep -Fq "String.fromCharCode(39)+raw" src/app/admin/page.tsx
+          grep -Fq "replaceAll" src/app/admin/page.tsx
