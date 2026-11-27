@@ -345,16 +345,14 @@ jobs:
           grep -Fq 'A consulta ainda não possui um timestamp válido.' src/app/admin/page.tsx
 
 
-  admin-calendar-window-contract:
+  admin-calendar-window-future-bound-contract:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Verify reservation calendar window filter
+      - name: Verify future bound for reservation window
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'windowFilter==="7"?now+7*86400000:windowFilter==="30"?now+30*86400000:null' src/app/admin/page.tsx
-          grep -Fq 'id="window-filter"' src/app/admin/page.tsx
-          grep -Fq 'Próximos 7 dias' src/app/admin/page.tsx
-          grep -Fq 'Próximos 30 dias' src/app/admin/page.tsx
+          test -f tests/sql/admin_calendar_window_future_bound_contract.sql
+          grep -Fq 'Number.isFinite(startsAt)&&startsAt>=now&&startsAt<=end' src/app/admin/page.tsx
