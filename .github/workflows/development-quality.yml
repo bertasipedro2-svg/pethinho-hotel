@@ -235,3 +235,18 @@ jobs:
           grep -Fq "availability_duplicate_ids" tests/sql/availability_view_integrity_contract.sql
           grep -Fq "availability_values_consistent" tests/sql/availability_view_integrity_contract.sql
           grep -Fq "availability_contract_passed" tests/sql/availability_view_integrity_contract.sql
+
+  finance-settlement-integrity-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify finance settlement date integrity contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/finance_settlement_integrity_contract.sql
+          grep -Fq "settlement_date_constraint_present" tests/sql/finance_settlement_integrity_contract.sql
+          grep -Fq "invalid_settlement_dates" tests/sql/finance_settlement_integrity_contract.sql
+          grep -Fq "contract_passed" tests/sql/finance_settlement_integrity_contract.sql
+
