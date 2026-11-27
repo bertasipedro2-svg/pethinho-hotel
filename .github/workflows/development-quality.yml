@@ -299,3 +299,17 @@ jobs:
           test -f tests/sql/admin_csv_formula_injection_contract.sql
           grep -Fq "String.fromCharCode(39)+raw" src/app/admin/page.tsx
           grep -Fq "replaceAll" src/app/admin/page.tsx
+
+
+  admin-export-freshness-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify export freshness guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_export_freshness_contract.sql
+          grep -Fq 'const freshnessInvalid=!Number.isFinite(lastUpdatedMs)||lastUpdatedMs>now||now-lastUpdatedMs>5*60*1000;' src/app/admin/page.tsx
+          grep -Fq 'disabled={visibleRows.length===0||truncated||freshnessInvalid||availabilityInvalid||bookingInvalid||readinessInvalid}' src/app/admin/page.tsx
