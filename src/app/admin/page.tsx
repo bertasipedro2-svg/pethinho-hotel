@@ -15,7 +15,7 @@ export default function Admin(){
  const[loading,setLoading]=useState(true),[msg,setMsg]=useState("Verificando permissões...");
  const[refresh,setRefresh]=useState(0),[truncated,setTruncated]=useState(false);
  const[readiness,setReadiness]=useState<{accommodations:number;services:number}|null>(null),[lastUpdated,setLastUpdated]=useState<string|null>(null);
- const[availability,setAvailability]=useState<Availability[]>([]),[statusFilter,setStatusFilter]=useState("all");
+ const[availability,setAvailability]=useState<Availability[]>([]),[statusFilter,setStatusFilter]=useState("all"),[windowFilter,setWindowFilter]=useState("all");
  const[now,setNow]=useState(()=>Date.now());
  useEffect(()=>{const timer=window.setInterval(()=>setNow(Date.now()),60_000);return()=>window.clearInterval(timer)},[]);
  const lastUpdatedMs=lastUpdated?new Date(lastUpdated).getTime():NaN;
@@ -73,7 +73,7 @@ export default function Admin(){
   }
   void load(); return()=>{active=false};
  },[refresh]);
- const visibleRows=useMemo(()=>statusFilter==="all"?rows:rows.filter(row=>row.status===statusFilter),[rows,statusFilter]);
+ const visibleRows=useMemo(()=>{const now=Date.now();const end=windowFilter==="7"?now+7*86400000:windowFilter==="30"?now+30*86400000:null;return rows.filter(row=>(statusFilter==="all"||row.status===statusFilter)&&(!end||new Date(row.starts_at).getTime()<=end));},[rows,statusFilter,windowFilter]);
  const availabilityInvalid=useMemo(()=>{const ids=new Set<string>();return availability.some(x=>{const duplicate=!x.accommodation_id||ids.has(x.accommodation_id);ids.add(x.accommodation_id);return duplicate||[x.capacity,x.occupied_now,x.available_now].some(value=>!Number.isFinite(value))||x.capacity<0||x.occupied_now<0||x.available_now<0||x.occupied_now+x.available_now>x.capacity})},[availability]);
  const bookingInvalid=useMemo(()=>{const ids=new Set<string>();return rows.some(row=>{const start=new Date(row.starts_at).getTime();const end=new Date(row.ends_at).getTime();const invalid=!row.booking_id||ids.has(row.booking_id)||!Number.isFinite(start)||!Number.isFinite(end)||start>=end;ids.add(row.booking_id);return invalid})},[rows]);
  const availabilityReady=availability.some(x=>x.active);
@@ -99,7 +99,7 @@ export default function Admin(){
    {truncated&&<p role="alert">Limite de 10.000 reservas atingido. O exportador CSV foi desativado para evitar gerar um relatório incompleto; refine o filtro ou implemente paginação antes de exportar.</p>}
    {availabilityInvalid&&<p role="alert">A disponibilidade retornada contém valores inconsistentes. A exportação CSV foi bloqueada até a equipe validar a capacidade no banco.</p>}
    {bookingInvalid&&<p role="alert">A consulta de reservas contém identificadores duplicados ou intervalos de datas inválidos. A exportação CSV foi bloqueada até a equipe revisar a origem dos dados.</p>}
-   <div><label htmlFor="status-filter">Filtrar reservas: </label><select id="status-filter" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="all">Todas</option>{Object.entries(labels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></div>
+   <div><label htmlFor="status-filter">Filtrar reservas: </label><select id="status-filter" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="all">Todas</option>{Object.entries(labels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select> <label htmlFor="window-filter"> Janela: </label><select id="window-filter" value={windowFilter} onChange={e=>setWindowFilter(e.target.value)}><option value="all">Todas as datas</option><option value="7">Próximos 7 dias</option><option value="30">Próximos 30 dias</option></select></div>
    <div><button type="button" onClick={()=>{setLoading(true);setRefresh(n=>n+1)}} disabled={loading} aria-label="Atualizar dados e permissões">Atualizar dados</button> <button type="button" onClick={()=>downloadBookingsCsv(visibleRows)} disabled={visibleRows.length===0||truncated||freshnessInvalid||availabilityInvalid||bookingInvalid||readinessInvalid} aria-label={truncated?"Exportação desativada porque a consulta está incompleta":freshnessInvalid?"Exportação desativada porque os dados estão inválidos ou desatualizados":availabilityInvalid?"Exportação desativada porque a disponibilidade está inconsistente":bookingInvalid?"Exportação desativada porque as reservas estão inconsistentes":readinessInvalid?"Exportação desativada porque a homologação operacional está incompleta":"Exportar CSV do filtro"}>{truncated||freshnessInvalid||availabilityInvalid||bookingInvalid||readinessInvalid?"Exportação indisponível":"Exportar CSV do filtro"}</button></div>
    <section className="card" aria-labelledby="availability"><h2 id="availability">Disponibilidade atual</h2>{availability.length===0?<p>Nenhuma acomodação retornada pela consulta segura.</p>:<ul>{availability.map(x=><li key={x.accommodation_id}>{x.accommodation_name}: {x.available_now} vaga(s) disponível(is) de {x.capacity} — ocupadas agora: {x.occupied_now}{!x.active?" (inativa)":""}</li>)}</ul>}</section>
    <section className="card" aria-labelledby="summary"><h2 id="summary">Resumo por situação</h2><ul>{Object.entries(labels).map(([key,label])=><li key={key}>{label}: {stats.counts[key]||0}</li>)}</ul></section>
