@@ -313,3 +313,18 @@ jobs:
           test -f tests/sql/admin_export_freshness_contract.sql
           grep -Fq 'const freshnessInvalid=!Number.isFinite(lastUpdatedMs)||lastUpdatedMs>now||now-lastUpdatedMs>5*60*1000;' src/app/admin/page.tsx
           grep -Fq 'disabled={visibleRows.length===0||truncated||freshnessInvalid||availabilityInvalid||bookingInvalid||readinessInvalid}' src/app/admin/page.tsx
+
+
+  admin-availability-integrity-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify availability duplicate-id guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_availability_integrity_contract.sql
+          grep -Fq 'const ids=new Set<string>()' src/app/admin/page.tsx
+          grep -Fq 'const duplicate=!x.accommodation_id||ids.has(x.accommodation_id)' src/app/admin/page.tsx
+          grep -Fq 'availabilityInvalid' src/app/admin/page.tsx
