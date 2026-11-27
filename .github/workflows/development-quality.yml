@@ -83,6 +83,7 @@ jobs:
         run: |
           set -euo pipefail
           grep -Fq 'const availabilityReady=availability.some(x=>x.active);' src/app/admin/page.tsx
+grep -Fq 'const safe=/^[=+\\-@]/.test(raw)?String.fromCharCode(39)+raw:raw;' src/app/admin/page.tsx
           grep -Fq 'const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0||!availabilityReady;' src/app/admin/page.tsx
           grep -Fq 'readinessInvalid' src/app/admin/page.tsx
           grep -Fq 'const availabilityCoverageInvalid=!readiness||activeAvailability.length!==readiness.accommodations||activeAvailabilityIds.size!==activeAvailability.length;' src/app/admin/page.tsx
