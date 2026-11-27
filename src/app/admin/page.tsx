@@ -73,7 +73,7 @@ export default function Admin(){
   }
   void load(); return()=>{active=false};
  },[refresh]);
- const visibleRows=useMemo(()=>{const now=Date.now();const end=windowFilter==="7"?now+7*86400000:windowFilter==="30"?now+30*86400000:null;return rows.filter(row=>(statusFilter==="all"||row.status===statusFilter)&&(!end||new Date(row.starts_at).getTime()<=end));},[rows,statusFilter,windowFilter]);
+ const visibleRows=useMemo(()=>{const now=Date.now();const end=windowFilter==="7"?now+7*86400000:windowFilter==="30"?now+30*86400000:null;return rows.filter(row=>{const startsAt=new Date(row.starts_at).getTime();return (statusFilter==="all"||row.status===statusFilter)&&(!end||(Number.isFinite(startsAt)&&startsAt>=now&&startsAt<=end));});},[rows,statusFilter,windowFilter]);
  const availabilityInvalid=useMemo(()=>{const ids=new Set<string>();return availability.some(x=>{const duplicate=!x.accommodation_id||ids.has(x.accommodation_id);ids.add(x.accommodation_id);return duplicate||[x.capacity,x.occupied_now,x.available_now].some(value=>!Number.isFinite(value))||x.capacity<0||x.occupied_now<0||x.available_now<0||x.occupied_now+x.available_now>x.capacity})},[availability]);
  const bookingInvalid=useMemo(()=>{const ids=new Set<string>();return rows.some(row=>{const start=new Date(row.starts_at).getTime();const end=new Date(row.ends_at).getTime();const invalid=!row.booking_id||ids.has(row.booking_id)||!Number.isFinite(start)||!Number.isFinite(end)||start>=end;ids.add(row.booking_id);return invalid})},[rows]);
  const availabilityReady=availability.some(x=>x.active);
