@@ -83,10 +83,10 @@ export default function Admin(){
  const availabilityCoverageInvalid=!readiness||activeAvailability.length!==readiness.accommodations||activeAvailabilityIds.size!==activeAvailability.length||activeAvailabilityIds.has("");
  const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0||!availabilityReady||availabilityCoverageInvalid;
  const stats=useMemo(()=>{
-  const counts:Record<string,number>={}; for(const row of visibleRows)counts[row.status]=(counts[row.status]||0)+1;
+  const counts:Record<string,number>={}; for(const row of visibleRows){const normalizedStatus=typeof row.status==="string"?row.status.trim():""; counts[normalizedStatus]=(counts[normalizedStatus]||0)+1;}
   const currentNow=now;
-  const upcoming=visibleRows.filter(x=>["approved","confirmed"].includes(x.status)&&new Date(x.starts_at).getTime()>=currentNow&&new Date(x.starts_at).getTime()<currentNow+7*86400000).sort((a,b)=>a.starts_at.localeCompare(b.starts_at));
-  const staying=visibleRows.filter(x=>x.status==="checked_in");
+  const upcoming=visibleRows.filter(x=>{const normalizedStatus=typeof x.status==="string"?x.status.trim():"";return ["approved","confirmed"].includes(normalizedStatus)&&new Date(x.starts_at).getTime()>=currentNow&&new Date(x.starts_at).getTime()<currentNow+7*86400000}).sort((a,b)=>a.starts_at.localeCompare(b.starts_at));
+  const staying=visibleRows.filter(x=>(typeof x.status==="string"?x.status.trim():"")==="checked_in");
   return {counts,upcoming,staying};
  },[visibleRows,now]);
  return <main>
