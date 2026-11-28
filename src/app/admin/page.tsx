@@ -79,8 +79,8 @@ export default function Admin(){
  const bookingInvalid=useMemo(()=>{const ids=new Set<string>();return rows.some(row=>{const bookingId=typeof row.booking_id==="string"?row.booking_id.trim():"";const normalizedStatus=typeof row.status==="string"?row.status.trim():"";const start=new Date(row.starts_at).getTime();const end=new Date(row.ends_at).getTime();const invalid=!bookingId||ids.has(bookingId)||!normalizedStatus||!allowedBookingStatuses.has(normalizedStatus)||typeof row.pet_name!=="string"||!row.pet_name.trim()||!Number.isFinite(start)||!Number.isFinite(end)||start>=end;if(bookingId)ids.add(bookingId);return invalid})},[rows]);
  const availabilityReady=availability.some(x=>x.active);
  const activeAvailability=availability.filter(x=>x.active);
- const activeAvailabilityIds=new Set(activeAvailability.map(x=>x.accommodation_id));
- const availabilityCoverageInvalid=!readiness||activeAvailability.length!==readiness.accommodations||activeAvailabilityIds.size!==activeAvailability.length;
+ const activeAvailabilityIds=new Set(activeAvailability.map(x=>typeof x.accommodation_id==="string"?x.accommodation_id.trim():""));
+ const availabilityCoverageInvalid=!readiness||activeAvailability.length!==readiness.accommodations||activeAvailabilityIds.size!==activeAvailability.length||activeAvailabilityIds.has("");
  const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0||!availabilityReady||availabilityCoverageInvalid;
  const stats=useMemo(()=>{
   const counts:Record<string,number>={}; for(const row of visibleRows)counts[row.status]=(counts[row.status]||0)+1;
