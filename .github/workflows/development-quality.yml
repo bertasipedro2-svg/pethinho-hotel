@@ -491,3 +491,18 @@ jobs:
           set -euo pipefail
           test -f tests/sql/admin_upcoming_status_label_normalization_contract.sql
           grep -Fq 'labels[typeof x.status==="string"?x.status.trim():""]||x.status' src/app/admin/page.tsx
+
+
+  admin-export-exact-coverage-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify exact availability coverage export guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_export_exact_coverage_guard_contract.sql
+          grep -Fq 'disabled={visibleRows.length===0||truncated||freshnessInvalid||availabilityInvalid||bookingInvalid||readinessInvalid}' src/app/admin/page.tsx
+          grep -Fq 'const availabilityCoverageInvalid=' src/app/admin/page.tsx
+          grep -Fq 'availabilityCoverageInvalid||!availabilityReady' src/app/admin/page.tsx
