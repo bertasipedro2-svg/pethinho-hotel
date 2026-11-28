@@ -521,3 +521,17 @@ jobs:
           grep -Fq 'const invalidStatusCount=visibleRows.filter' src/app/admin/page.tsx
           grep -Fq 'stats.invalidStatusCount>0' src/app/admin/page.tsx
           grep -Fq 'status fora do catálogo operacional' src/app/admin/page.tsx
+
+
+  admin-booking-accommodation-required-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify accommodation assignment guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_booking_accommodation_required_contract.sql
+          grep -Fq 'const validAccommodationText=typeof row.accommodation_name==="string"&&row.accommodation_name.trim().length>0;' src/app/admin/page.tsx
+          grep -Fq 'booking_accommodation_required_guard' tests/sql/admin_booking_accommodation_required_contract.sql
