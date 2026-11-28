@@ -10,6 +10,7 @@ const downloadBookingsCsv=(items:Booking[])=>{const header=["booking_id","pet_na
 ");const csv="\uFEFF"+header.join(",")+"\r
 "+body;const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=`pethinho-bookings-${new Date().toISOString().slice(0,10)}.csv`;link.rel="noopener";document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url)};
 const labels:Record<string,string>={pending:"Pendente",approved:"Aprovada",awaiting_payment:"Aguardando pagamento",confirmed:"Confirmada",checked_in:"Hospedado",checked_out:"Check-out",completed:"Concluída",cancelled:"Cancelada",no_show:"Não compareceu"};
+const allowedBookingStatuses=new Set(Object.keys(labels));
 export default function Admin(){
  const[allowed,setAllowed]=useState(false),[rows,setRows]=useState<Booking[]>([]);
  const[loading,setLoading]=useState(true),[msg,setMsg]=useState("Verificando permissões...");
@@ -75,7 +76,7 @@ export default function Admin(){
  },[refresh]);
  const visibleRows=useMemo(()=>{const currentNow=now;const end=windowFilter==="7"?currentNow+7*86400000:windowFilter==="30"?currentNow+30*86400000:null;return rows.filter(row=>{const startsAt=new Date(row.starts_at).getTime();return (statusFilter==="all"||row.status===statusFilter)&&(!end||(Number.isFinite(startsAt)&&startsAt>=currentNow&&startsAt<=end));});},[rows,statusFilter,windowFilter,now]);
  const availabilityInvalid=useMemo(()=>{const ids=new Set<string>();return availability.some(x=>{const duplicate=!x.accommodation_id||ids.has(x.accommodation_id);ids.add(x.accommodation_id);return duplicate||[x.capacity,x.occupied_now,x.available_now].some(value=>!Number.isFinite(value))||x.capacity<0||x.occupied_now<0||x.available_now<0||x.occupied_now+x.available_now>x.capacity})},[availability]);
- const bookingInvalid=useMemo(()=>{const ids=new Set<string>();return rows.some(row=>{const start=new Date(row.starts_at).getTime();const end=new Date(row.ends_at).getTime();const invalid=!row.booking_id||ids.has(row.booking_id)||!row.status||!row.pet_name.trim()||!Number.isFinite(start)||!Number.isFinite(end)||start>=end;ids.add(row.booking_id);return invalid})},[rows]);
+ const bookingInvalid=useMemo(()=>{const ids=new Set<string>();return rows.some(row=>{const start=new Date(row.starts_at).getTime();const end=new Date(row.ends_at).getTime();const invalid=!row.booking_id||ids.has(row.booking_id)||!allowedBookingStatuses.has(row.status)||!row.pet_name.trim()||!Number.isFinite(start)||!Number.isFinite(end)||start>=end;ids.add(row.booking_id);return invalid})},[rows]);
  const availabilityReady=availability.some(x=>x.active);
  const activeAvailability=availability.filter(x=>x.active);
  const activeAvailabilityIds=new Set(activeAvailability.map(x=>x.accommodation_id));
