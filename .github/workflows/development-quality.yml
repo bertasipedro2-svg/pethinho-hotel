@@ -460,3 +460,20 @@ jobs:
           grep -Fq 'const normalizedStatus=typeof row.status==="string"?row.status.trim():""; counts[normalizedStatus]' src/app/admin/page.tsx
           grep -Fq 'const normalizedStatus=typeof x.status==="string"?x.status.trim():"";return ["approved","confirmed"].includes(normalizedStatus)' src/app/admin/page.tsx
           grep -Fq 'typeof x.status==="string"?x.status.trim():"")==="checked_in"' src/app/admin/page.tsx
+
+
+  admin-availability-exact-identity-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify exact active accommodation identity coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_availability_exact_identity_contract.sql
+          grep -Fq 'select("id",{count:"exact"}).eq("active",true)' src/app/admin/page.tsx
+          grep -Fq 'setActiveAccommodationIds(new Set((accommodationsResult.data||[]).map(x=>typeof x.id==="string"?x.id.trim():"")))' src/app/admin/page.tsx
+          grep -Fq 'activeAccommodationIds.size!==readiness.accommodations' src/app/admin/page.tsx
+          grep -Fq 'some(id=>!activeAvailabilityIds.has(id))' src/app/admin/page.tsx
+          grep -Fq 'some(id=>!activeAccommodationIds.has(id))' src/app/admin/page.tsx
