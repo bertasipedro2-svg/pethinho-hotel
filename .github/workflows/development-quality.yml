@@ -431,3 +431,17 @@ jobs:
           test -f tests/sql/admin_booking_status_whitespace_contract.sql
           grep -Fq 'const normalizedStatus=typeof row.status==="string"?row.status.trim():"";' src/app/admin/page.tsx
           grep -Fq 'allowedBookingStatuses.has(normalizedStatus)' src/app/admin/page.tsx
+
+
+  admin-booking-status-filter-normalization-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify normalized booking status filter
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_booking_status_filter_normalization_contract.sql
+          grep -Fq 'const normalizedStatus=typeof row.status==="string"?row.status.trim():"";' src/app/admin/page.tsx
+          grep -Fq 'statusFilter==="all"||normalizedStatus===statusFilter' src/app/admin/page.tsx
