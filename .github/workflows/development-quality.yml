@@ -445,3 +445,18 @@ jobs:
           test -f tests/sql/admin_booking_status_filter_normalization_contract.sql
           grep -Fq 'const normalizedStatus=typeof row.status==="string"?row.status.trim():"";' src/app/admin/page.tsx
           grep -Fq 'statusFilter==="all"||normalizedStatus===statusFilter' src/app/admin/page.tsx
+
+
+  admin-summary-status-normalization-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify normalized status in admin summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_summary_status_normalization_contract.sql
+          grep -Fq 'const normalizedStatus=typeof row.status==="string"?row.status.trim():""; counts[normalizedStatus]' src/app/admin/page.tsx
+          grep -Fq 'const normalizedStatus=typeof x.status==="string"?x.status.trim():"";return ["approved","confirmed"].includes(normalizedStatus)' src/app/admin/page.tsx
+          grep -Fq 'typeof x.status==="string"?x.status.trim():"")==="checked_in"' src/app/admin/page.tsx
