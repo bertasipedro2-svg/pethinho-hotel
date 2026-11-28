@@ -327,7 +327,8 @@ jobs:
           set -euo pipefail
           test -f tests/sql/admin_availability_integrity_contract.sql
           grep -Fq 'const ids=new Set<string>()' src/app/admin/page.tsx
-          grep -Fq 'const duplicate=!x.accommodation_id||ids.has(x.accommodation_id)' src/app/admin/page.tsx
+          grep -Fq 'const malformedIdentity=typeof x.accommodation_id!=="string"||!x.accommodation_id.trim()||typeof x.accommodation_name!=="string"||!x.accommodation_name.trim()||typeof x.active!=="boolean";' src/app/admin/page.tsx
+          grep -Fq 'const duplicate=!malformedIdentity&&ids.has(x.accommodation_id);' src/app/admin/page.tsx
           grep -Fq 'availabilityInvalid' src/app/admin/page.tsx
 
 
