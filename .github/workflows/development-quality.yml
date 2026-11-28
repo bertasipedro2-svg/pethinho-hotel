@@ -334,6 +334,7 @@ jobs:
           grep -Fq 'const ids=new Set<string>()' src/app/admin/page.tsx
           grep -Fq 'const malformedIdentity=!accommodationId||typeof x.accommodation_name!=="string"||!x.accommodation_name.trim()||typeof x.active!=="boolean";' src/app/admin/page.tsx
           grep -Fq 'const duplicate=!malformedIdentity&&ids.has(accommodationId);' src/app/admin/page.tsx
+          grep -Fq 'x.occupied_now+x.available_now!==x.capacity' src/app/admin/page.tsx
           grep -Fq 'availabilityInvalid' src/app/admin/page.tsx
 
 
