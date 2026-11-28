@@ -16,7 +16,7 @@ export default function Admin(){
  const[loading,setLoading]=useState(true),[msg,setMsg]=useState("Verificando permissões...");
  const[refresh,setRefresh]=useState(0),[truncated,setTruncated]=useState(false);
  const[readiness,setReadiness]=useState<{accommodations:number;services:number}|null>(null),[lastUpdated,setLastUpdated]=useState<string|null>(null);
- const[availability,setAvailability]=useState<Availability[]>([]),[statusFilter,setStatusFilter]=useState("all"),[windowFilter,setWindowFilter]=useState("all");
+ const[availability,setAvailability]=useState<Availability[]>([]),[activeAccommodationIds,setActiveAccommodationIds]=useState<Set<string>>(new Set()),[statusFilter,setStatusFilter]=useState("all"),[windowFilter,setWindowFilter]=useState("all");
  const[now,setNow]=useState(()=>Date.now());
  useEffect(()=>{const timer=window.setInterval(()=>setNow(Date.now()),60_000);return()=>window.clearInterval(timer)},[]);
  const lastUpdatedMs=lastUpdated?new Date(lastUpdated).getTime():NaN;
@@ -26,7 +26,7 @@ export default function Admin(){
   const db=getSupabase();
   const {data:{subscription}}=db.auth.onAuthStateChange(event=>{
    if(event==="SIGNED_IN"||event==="SIGNED_OUT"||event==="USER_UPDATED"){
-    setAllowed(false);setRows([]);setReadiness(null);setLastUpdated(null);setLoading(true);setRefresh(n=>n+1);
+    setAllowed(false);setRows([]);setReadiness(null);setActiveAccommodationIds(new Set());setLastUpdated(null);setLoading(true);setRefresh(n=>n+1);
    }
   });
   const revalidate=()=>{
@@ -39,7 +39,7 @@ export default function Admin(){
  useEffect(()=>{
   let active=true;
   async function load(){
-   if(active){setLoading(true);setAllowed(false);setRows([]);setReadiness(null);setLastUpdated(null);setTruncated(false);setMsg("Verificando permissões...");}
+   if(active){setLoading(true);setAllowed(false);setRows([]);setReadiness(null);setActiveAccommodationIds(new Set());setLastUpdated(null);setTruncated(false);setMsg("Verificando permissões...");}
    try{
     const db=getSupabase();
     const{data:{user},error:authError}=await db.auth.getUser();
@@ -49,7 +49,7 @@ export default function Admin(){
     if(roleError)throw roleError;
     if(!role||!["admin","staff"].includes(role.role)){if(active)setMsg("Acesso restrito à equipe autorizada.");return}
     const [accommodationsResult,servicesResult,availabilityResult]=await Promise.all([
-     db.from("accommodations").select("id",{count:"exact",head:true}).eq("active",true),
+     db.from("accommodations").select("id",{count:"exact"}).eq("active",true),
      db.from("services").select("id",{count:"exact",head:true}).eq("active",true),
      db.from("accommodation_availability").select("accommodation_id,accommodation_name,capacity,occupied_now,available_now,active").order("accommodation_name",{ascending:true}),
     ]);
@@ -68,7 +68,7 @@ export default function Admin(){
     const {data:currentRole,error:currentRoleError}=await db.from("staff_roles").select("role").eq("user_id",currentUser.id).maybeSingle();
     if(currentRoleError)throw currentRoleError;
     if(!currentRole||!["admin","staff"].includes(currentRole.role))throw new Error("Acesso administrativo revogado.");
-    if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setReadiness({accommodations:accommodationsResult.count??0,services:servicesResult.count??0});setAvailability((availabilityResult.data||[]) as Availability[]);setLastUpdated(new Date().toISOString());setMsg("");}
+    if(active){setAllowed(true);setRows(all);setTruncated(hasMore);setReadiness({accommodations:accommodationsResult.count??0,services:servicesResult.count??0});setActiveAccommodationIds(new Set((accommodationsResult.data||[]).map(x=>typeof x.id==="string"?x.id.trim():"")));setAvailability((availabilityResult.data||[]) as Availability[]);setLastUpdated(new Date().toISOString());setMsg("");}
    }catch(e){if(active){setAllowed(false);setReadiness(null);setMsg(e instanceof Error?e.message:"Falha ao consultar reservas.");}}
    finally{if(active)setLoading(false)}
   }
@@ -80,7 +80,7 @@ export default function Admin(){
  const availabilityReady=availability.some(x=>x.active);
  const activeAvailability=availability.filter(x=>x.active);
  const activeAvailabilityIds=new Set(activeAvailability.map(x=>typeof x.accommodation_id==="string"?x.accommodation_id.trim():""));
- const availabilityCoverageInvalid=!readiness||activeAvailability.length!==readiness.accommodations||activeAvailabilityIds.size!==activeAvailability.length||activeAvailabilityIds.has("");
+ const availabilityCoverageInvalid=!readiness||activeAvailability.length!==readiness.accommodations||activeAvailabilityIds.size!==activeAvailability.length||activeAvailabilityIds.has("")||activeAccommodationIds.size!==readiness.accommodations||[...activeAccommodationIds].some(id=>!activeAvailabilityIds.has(id))||[...activeAvailabilityIds].some(id=>!activeAccommodationIds.has(id));
  const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0||!availabilityReady||availabilityCoverageInvalid;
  const stats=useMemo(()=>{
   const counts:Record<string,number>={}; for(const row of visibleRows){const normalizedStatus=typeof row.status==="string"?row.status.trim():""; counts[normalizedStatus]=(counts[normalizedStatus]||0)+1;}
