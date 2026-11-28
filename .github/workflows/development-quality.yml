@@ -477,3 +477,16 @@ jobs:
           grep -Fq 'activeAccommodationIds.size!==readiness.accommodations' src/app/admin/page.tsx
           grep -Fq 'some(id=>!activeAvailabilityIds.has(id))' src/app/admin/page.tsx
           grep -Fq 'some(id=>!activeAccommodationIds.has(id))' src/app/admin/page.tsx
+
+
+  admin-upcoming-status-label-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify normalized status label in upcoming bookings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_upcoming_status_label_normalization_contract.sql
+          grep -Fq 'labels[typeof x.status==="string"?x.status.trim():""]||x.status' src/app/admin/page.tsx
