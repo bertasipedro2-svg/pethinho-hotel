@@ -42,6 +42,10 @@ jobs:
           grep -Fq 'Number.isFinite(value)' src/app/admin/page.tsx
           grep -Fq 'truncated' src/app/admin/page.tsx
           grep -Fq 'setInterval(()=>setNow(Date.now()),60_000)' src/app/admin/page.tsx
+          test -f tests/sql/admin_booking_date_type_guard_contract.sql
+          grep -Fq "booking_export_rejects_non_text_or_blank_dates" tests/sql/admin_booking_date_type_guard_contract.sql
+          grep -Fq "validStartText" src/app/admin/page.tsx
+          grep -Fq "validEndText" src/app/admin/page.tsx
 
   operational-rpc-security-contract:
     runs-on: ubuntu-latest
