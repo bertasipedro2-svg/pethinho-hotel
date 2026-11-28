@@ -87,6 +87,7 @@ jobs:
           grep -Fq 'const readinessInvalid=!readiness||readiness.accommodations===0||readiness.services===0||!availabilityReady||availabilityCoverageInvalid;' src/app/admin/page.tsx
           grep -Fq 'readinessInvalid' src/app/admin/page.tsx
           grep -Fq 'const availabilityCoverageInvalid=!readiness||activeAvailability.length!==readiness.accommodations||activeAvailabilityIds.size!==activeAvailability.length;' src/app/admin/page.tsx
+          grep -Fq 'typeof x.accommodation_id===\"string\"?x.accommodation_id.trim():\"\"' src/app/admin/page.tsx
 
   extension-schema-contract:
     runs-on: ubuntu-latest
