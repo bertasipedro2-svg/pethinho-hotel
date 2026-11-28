@@ -1,0 +1,3 @@
+-- Regression contract: admin CSV export must remain blocked when active accommodation
+-- coverage does not exactly match the availability snapshot.
+-- This file is intentionally static and is executed by the development-quality workflow.
