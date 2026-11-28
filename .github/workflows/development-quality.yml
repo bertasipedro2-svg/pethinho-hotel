@@ -412,3 +412,17 @@ jobs:
           test -f tests/sql/admin_csv_whitespace_formula_contract.sql
           grep -Fq 'const formulaCandidate=raw.trimStart();' src/app/admin/page.tsx
           grep -Fq 'const safe=/^[=+\\-@]/.test(formulaCandidate)?String.fromCharCode(39)+raw:raw;' src/app/admin/page.tsx
+
+
+  admin-booking-status-whitespace-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify normalized booking status guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tests/sql/admin_booking_status_whitespace_contract.sql
+          grep -Fq 'const normalizedStatus=typeof row.status==="string"?row.status.trim():"";' src/app/admin/page.tsx
+          grep -Fq 'allowedBookingStatuses.has(normalizedStatus)' src/app/admin/page.tsx
